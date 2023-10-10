@@ -20,7 +20,6 @@ public class Program
         builder.Services.AddRazorPages();
         builder.Services.AddDirectoryBrowser();
         builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
-        builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
         builder.Services.AddSingleton<IDownloadService, DownloadService>();
         var app = builder.Build();
 
@@ -42,8 +41,8 @@ public class Program
         //    RequestPath = "/Downloadables"
         //});
 
-        var fileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "Downloadables"));
-        var requestPath = "/Downloadables";
+        var fileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, downloadFolder));
+        var requestPath = $"/{downloadFolder}";
 
         // Enable displaying browser links.
         app.UseStaticFiles(new StaticFileOptions
