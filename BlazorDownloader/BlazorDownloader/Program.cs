@@ -56,5 +56,4 @@ public partial class Program
     public static string downloadFolder = "Downloadables";
     public static string downloadRootPath = string.Empty;
     // public static string downloadRootPath = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Downloadables")).Root;
-    public static Dictionary<string, string> fileNameUrlDownnloading = new();
 }

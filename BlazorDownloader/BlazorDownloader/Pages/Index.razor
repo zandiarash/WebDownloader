@@ -1,18 +1,90 @@
 ﻿@page "/"
+@inject IDownloadService downloadService
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Download Platform</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="card">
+    <div class="card-header">
+        Download To Server
+    </div>
+    <div class="card-body">
+        <div class="form-group">
+            <input name="Link" @bind="@currentLink" class="form-control" id="link" placeholder="Enter link here">
+        </div>
+        <br />
+        <center>
+            <button @onclick="IncrementCount" class="btn btn-success btn-lg">Download</button>
+        </center>
+    </div>
+</div>
 
-Welcome to your new app.
+@{
+    <div hidden="@(DownloadService.fileNameUrlDownnloading.Count==0)">
+        <hr />
+        <div class="card">
+            <div class="card-header">
+                Downloading
+            </div>
+            <div class="card-body">
+                @{
+                    foreach (var item in DownloadService.fileNameUrlDownnloading)
+                    {
+                        <p>@item.Value - @item.Key</p>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@{
+    if (DownloadService.fileNameUrlDownnloaded.Count != 0)
+    {
+        <hr />
+        <div class="card">
+            <div class="card-header">
+                Downloaded
+            </div>
+            <div class="card-body">
+                @{
+                    // var request = HttpContext.Request;
+                    // var _baseURL = $"{request.Scheme}://{request.Host}";
 
-<button @onclick="IncrementCount">Download</button>
+                    foreach (var item in DownloadService.fileNameUrlDownnloaded)
+                    {
+                        // <a download href="@($@"{_baseURL}/{Program.downloadFolder}/{item}")">@item</a>
+                        <p><a download href="">@item</a></p>
+                    }
+                }
+            </div>
+        </div>
+    }
+}
+
 
 @code {
-    private void IncrementCount()
+    // [Inject]
+    // private IDownloadService downloadService { get; set; }
+    private string currentLink { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
     {
-        
+        DownloadService.fileNameUrlDownnloaded.Clear();
+        var files = new DirectoryInfo(Program.downloadRootPath).GetFiles();
+        foreach (var item in files)
+            DownloadService.fileNameUrlDownnloaded.Add(item.Name);
+    }
+
+    private async void IncrementCount()
+    {
+        if (string.IsNullOrEmpty(currentLink))
+            return;
+
+        var fileName = new Uri(currentLink).Segments.Last();
+        if (!DownloadService.fileNameUrlDownnloading.ContainsKey(currentLink))
+        {
+            DownloadService.fileNameUrlDownnloading.Add(currentLink, fileName);
+            await downloadService.DownloadFromUrlAsync(currentLink, fileName);
+        }
     }
 }

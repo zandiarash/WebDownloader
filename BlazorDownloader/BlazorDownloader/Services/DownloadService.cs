@@ -1,19 +1,27 @@
 
 public interface IDownloadService
 {
-    public Task DownloadFromUrlAsync(string url,string fileName);
+    public Task DownloadFromUrlAsync(string url, string fileName);
 }
 public class DownloadService : IDownloadService
 {
-    public async Task DownloadFromUrlAsync(string url,string fileName)
+    public static Dictionary<string, string> fileNameUrlDownnloading = new();
+    public static List<string> fileNameUrlDownnloaded = new();
+    public async Task DownloadFromUrlAsync(string url, string fileName)
     {
+        if(fileNameUrlDownnloading.ContainsKey(url)) { return; }
+
+        HttpResponseMessage response = null;
         string fileNamePath = Path.Combine(Program.downloadRootPath, fileName);
         using var client = new HttpClient();
-
-        var response = await client.GetAsync(url);
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            Program.fileNameUrlDownnloading.Remove(url);
+            response = await client.GetAsync(url);
+        }
+        catch (Exception ex) { }
+        if (response==null || !response.IsSuccessStatusCode)
+        {
+            fileNameUrlDownnloading.Remove(url);
             return;
         }
 
@@ -26,6 +34,7 @@ public class DownloadService : IDownloadService
         using var fileStream = fileInfo.OpenWrite();
         await stream.CopyToAsync(fileStream);
 
-        Program.fileNameUrlDownnloading.Remove(url);
+        fileNameUrlDownnloading.Remove(url);
+        fileNameUrlDownnloaded.Add(fileName);
     }
 }
