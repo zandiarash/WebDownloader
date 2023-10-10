@@ -1,10 +1,71 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    @* ViewData["Title"] = "Home page"; *@
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p><a href="/Downloadables">Click Here to redirect to download page</a></p>
 </div>
+
+
+<div class="card">
+    <div class="card-header">
+        Download To Server
+    </div>
+    <div class="card-body">
+        <form asp-action="./">
+            <div class="form-group">
+                <input name="Link" class="form-control" id="link" placeholder="Enter link here">
+            </div>
+            <br />
+            <center>
+                <button type="submit" class="btn btn-success btn-lg">Download</button>
+            </center>
+        </form>
+    </div>
+</div>
+
+@{
+    if (Model.fileNameUrlDownnloading.Count != 0)
+    {
+        <hr />
+        <div class="card">
+            <div class="card-header">
+                Downloading
+            </div>
+            <div class="card-body">
+                @{
+                    foreach (var item in Model.fileNameUrlDownnloading)
+                    {
+                        <p>@item.Value - @item.Key</p>
+                    }
+                }
+            </div>
+        </div>
+    }
+}
+
+@{
+    if (Model.fileNameUrlDownnloaded.Count != 0)
+    {
+        <hr />
+        <div class="card">
+            <div class="card-header">
+                Downloaded
+            </div>
+            <div class="card-body">
+                @{
+                    var request = HttpContext.Request;
+                    var _baseURL = $"{request.Scheme}://{request.Host}";
+
+                    foreach (var item in Model.fileNameUrlDownnloaded)
+                    {
+                        <a download href="@($@"{_baseURL}/{Program.downloadFolder}/{item}")">@item</a>
+                    }
+                }
+            </div>
+        </div>
+    }
+}
