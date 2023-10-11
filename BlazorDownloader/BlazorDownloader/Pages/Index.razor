@@ -1,7 +1,9 @@
 ﻿@page "/"
+@using System.Text;
 @inject IDownloadService downloadService
 @inject IHttpContextAccessor httpContextAccessor
 @inject Blazored.Toast.Services.IToastService ToastService
+@inject IJSRuntime JS
 
 <PageTitle>Download Platform</PageTitle>
 
@@ -16,7 +18,7 @@
         <br />
         <center>
             <button @onclick="DownloadLink" class="btn btn-success ">Download To Server</button>
-            <button @onclick="DownloadLink" class="btn btn-info ">Download Directly</button>
+            <button @onclick="DownloadFromUrlAsyncDirect" class="btn btn-info ">Download Directly</button>
         </center>
     </div>
 </div>
@@ -92,6 +94,77 @@
         _baseURL = $"{httpContextAccessor?.HttpContext?.Request.Scheme}://{httpContextAccessor?.HttpContext?.Request.Host}";
     }
 
+    // private Stream GetFileStream()
+    // {
+    //     var randomBinaryData = new byte[50 * 1024];
+    //     var fileStream = new MemoryStream(randomBinaryData);
+
+    //     return fileStream;
+    // }
+
+    // private async Task DownloadFileFromStream()
+    // {
+    //     var fileStream = GetFileStream();
+    //     var fileName = "log.bin";
+
+    //     using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+    //     await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    // }
+
+
+    // private async Task DownloadFile()
+    // {
+    //     // Generate the file content (e.g., a text file)
+    //     byte[] fileContent = Encoding.UTF8.GetBytes("Hello, Blazor!");
+
+    //     // Set the file's name and content type
+    //     string fileName = "example.txt";
+    //     string contentType = "text/plain";
+
+    //     // Trigger the download
+    //     await JSRuntime.InvokeAsync<object>("downloadFile", fileName, contentType, fileContent);
+    // }
+
+    public async void DownloadFromUrlAsyncDirect()
+    {
+        if (string.IsNullOrEmpty(currentLink))
+        {
+            ToastService.ShowWarning("Please Enter Your Link To Download");
+            return;
+        }
+
+        Uri uri = null;
+        try
+        {
+            uri = new Uri(currentLink);
+        }
+        catch
+        {
+            ToastService.ShowError("please Enter A Valid Url");
+            return;
+        }
+
+        var fileName = uri.Segments.Last();
+
+
+        try
+        {
+            var net = new System.Net.WebClient();
+            var data = net.DownloadData(currentLink);
+            var content = new MemoryStream(data);
+            using var streamRef = new DotNetStreamReference(stream: content);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+
+        }
+        catch
+        {
+            ToastService.ShowError($"Problem With Download {fileName}");
+        }
+
+        return;
+    }
+
     private async void DownloadLink()
     {
         if (string.IsNullOrEmpty(currentLink))
@@ -101,7 +174,6 @@
         }
 
         Uri uri = null;
-
         try
         {
             uri = new Uri(currentLink);
@@ -114,7 +186,7 @@
 
         var fileName = uri.Segments.Last();
         var res = await downloadService.DownloadFromUrlAsync(() => { this.StateHasChanged(); return true; }, Program.downloadRootPath, currentLink, fileName);
-        if(!res)
+        if (!res)
             ToastService.ShowError($"Problem With Download {fileName}");
     }
 
