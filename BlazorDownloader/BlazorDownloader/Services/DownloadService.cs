@@ -22,15 +22,15 @@ public interface IDownloadService
 }
 public class DownloadService : IDownloadService
 {
-    public static List<Download> fileNameUrlDownnloading = new();
+    public static List<Download> fileNameUrlDownloading = new();
     public static List<string> fileNameUrlDownnloaded = new();
     public static void removeDownloadingItem(string url)
     {
-        var item = fileNameUrlDownnloading.FirstOrDefault(x => x.url == url);
+        var item = fileNameUrlDownloading.FirstOrDefault(x => x.url == url);
         if (item != null)
         {
             item.cancellationTokenSource.Cancel();
-            fileNameUrlDownnloading.Remove(item);
+            fileNameUrlDownloading.Remove(item);
         }
     }
     public static void removeDownloadedItem(string fileName, string downloadRootPath)
@@ -43,10 +43,10 @@ public class DownloadService : IDownloadService
 
     public async Task<bool> DownloadFromUrlAsync(Func<bool> stateChange, string downloadRootPath, string url, string fileName)
     {
-        if (fileNameUrlDownnloading.Any(x => x.url == url)) { return false; }
+        if (fileNameUrlDownloading.Any(x => x.url == url)) { return false; }
         var thisDownload = new Download(url, fileName, new CancellationTokenSource());
 
-        fileNameUrlDownnloading.Add(thisDownload);
+        fileNameUrlDownloading.Add(thisDownload);
 
         string DestinationFilePath = Path.Combine(downloadRootPath, fileName);
 
@@ -61,6 +61,8 @@ public class DownloadService : IDownloadService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"HTTP error: {response.StatusCode}");
+                removeDownloadingItem(thisDownload.url);
+                stateChange();
                 return false;
             }
 

@@ -1,6 +1,7 @@
 ﻿@page "/"
 @inject IDownloadService downloadService
 @inject IHttpContextAccessor httpContextAccessor
+@inject Blazored.Toast.Services.IToastService ToastService
 
 <PageTitle>Download Platform</PageTitle>
 
@@ -22,7 +23,7 @@
 
 
 @{
-    if (DownloadService.fileNameUrlDownnloading.Count != 0)
+    if (DownloadService.fileNameUrlDownloading.Count != 0)
     {
         <br />
         <div class="card">
@@ -33,11 +34,11 @@
                 <ul class="list-group" id="item-list">
                     <!-- Example item with remove button -->
                     @{
-                        foreach (var item in DownloadService.fileNameUrlDownnloading)
+                        foreach (var item in DownloadService.fileNameUrlDownloading)
                         {
                             <li style="background:ivory" class="list-group-item d-flex justify-content-between align-items-center">
                                 <span>@item.fileName - @item.url@(item.processPercent == null ? "" : $" - {item.processPercent:0.##}%")</span>
-                                <button class="btn btn-danger btn-lg oi oi-delete" @onclick="() => cancelItem(item.url)"></button>
+                                <button class="btn btn-danger btn-lg oi oi-ban" @onclick="() => cancelItem(item.url)"></button>
                             </li>
                         }
                     }
@@ -94,8 +95,27 @@
     private async void DownloadLink()
     {
         if (string.IsNullOrEmpty(currentLink))
+        {
+            ToastService.ShowWarning("Please Enter Your Link To Download");
             return;
-        await downloadService.DownloadFromUrlAsync(() => { this.StateHasChanged(); return true; }, Program.downloadRootPath, currentLink, new Uri(currentLink).Segments.Last());
+        }
+
+        Uri uri = null;
+
+        try
+        {
+            uri = new Uri(currentLink);
+        }
+        catch
+        {
+            ToastService.ShowError("please Enter A Valid Url");
+            return;
+        }
+
+        var fileName = uri.Segments.Last();
+        var res = await downloadService.DownloadFromUrlAsync(() => { this.StateHasChanged(); return true; }, Program.downloadRootPath, currentLink, fileName);
+        if(!res)
+            ToastService.ShowError($"Problem With Download {fileName}");
     }
 
     protected void cancelItem(string key)

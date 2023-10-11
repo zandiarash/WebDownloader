@@ -1,4 +1,5 @@
 using BlazorDownloader.Data;
+using Blazored.Toast;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.FileProviders;
@@ -9,6 +10,9 @@ configurations = new ConfigurationBuilder().AddJsonFile("appsettings.json").Buil
 var builder = WebApplication.CreateBuilder(args);
 downloadRootPath = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, downloadFolder)).Root;
 
+builder.Services.AddBlazoredToast();
+
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
@@ -18,7 +22,6 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<IDownloadService, DownloadService>();
-
 
 var app = builder.Build();
 
