@@ -1,0 +1,46 @@
+
+
+
+//HttpResponseMessage response = null;
+//try
+//{
+//    response = await new HttpClient().GetAsync(url, thisDownload.cancellationTokenSource.Token);
+//}
+//catch { }
+
+//if (response == null || !response.IsSuccessStatusCode)
+//{
+//    removeDownloadingItem(url);
+//    return false;
+//}
+
+////Writing to file
+//var stream = await response.Content.ReadAsStreamAsync();
+//var fileInfo = new FileInfo(fileNamePath);
+//using var fileStream = fileInfo.OpenWrite();
+//await stream.CopyToAsync(fileStream);
+
+
+
+
+// Downloadning
+//var fileInfo = new FileInfo(fileNamePath);
+//try
+//{
+//    //HttpClient client = new HttpClient();
+//    //using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, thisDownload.cancellationTokenSource.Token);
+//    //// You must use as stream to have control over buffering and number of bytes read/received
+//    //using var stream = await response.Content.ReadAsStreamAsync();
+//    //// Read/process bytes from stream as appropriate
+//    //// Calculated by you based on how many bytes you have read.  Likely incremented within a loop.
+//    //long bytesRecieved = 0;//...
+
+//    //long? totalBytes = response.Content.Headers.ContentLength;
+//    ////double? percentComplete = (double)bytesRecieved / totalBytes;
+//    //thisDownload.processPercent = (double)bytesRecieved / totalBytes;
+//    //// Do what you want with `percentComplete`
+//    //stateChange();
+//    //using var fileStream = fileInfo.OpenWrite();
+//    //await stream.CopyToAsync(fileStream);
+//}
+//catch { }

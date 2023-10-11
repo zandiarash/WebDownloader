@@ -1,0 +1,40 @@
+
+            @* <button @onclick="DownloadFromUrlAsyncDirect" class="btn btn-info ">Download Directly</button> *@
+  @* public async void DownloadFromUrlAsyncDirect()
+    {
+        if (string.IsNullOrEmpty(currentLink))
+        {
+            ToastService.ShowWarning("Please Enter Your Link To Download");
+            return;
+        }
+
+        Uri uri = null;
+        try
+        {
+            uri = new Uri(currentLink);
+        }
+        catch
+        {
+            ToastService.ShowError("please Enter A Valid Url");
+            return;
+        }
+
+        var fileName = uri.Segments.Last();
+
+
+        try
+        {
+            var net = new System.Net.WebClient();
+            var data = net.DownloadData(currentLink);
+            var content = new MemoryStream(data);
+            using var streamRef = new DotNetStreamReference(stream: content);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+
+        }
+        catch
+        {
+            ToastService.ShowError($"Problem With Download {fileName}");
+        }
+
+        return;
+    } *@
