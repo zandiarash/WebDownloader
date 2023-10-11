@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject IDownloadService downloadService
+@inject IHttpContextAccessor httpContextAccessor
 
 <PageTitle>Download Platform</PageTitle>
 
@@ -13,58 +14,73 @@
         </div>
         <br />
         <center>
-            <button @onclick="IncrementCount" class="btn btn-success btn-lg">Download</button>
+            <button @onclick="DownloadLink" class="btn btn-success ">Download To Server</button>
+            <button @onclick="DownloadLink" class="btn btn-info ">Download Directly</button>
         </center>
     </div>
 </div>
 
+
+
+
 @{
-    <div hidden="@(DownloadService.fileNameUrlDownnloading.Count==0)">
-        <hr />
+    if (DownloadService.fileNameUrlDownnloading.Count != 0)
+    {
+        <br />
         <div class="card">
             <div class="card-header">
                 Downloading
             </div>
             <div class="card-body">
-                @{
-                    foreach (var item in DownloadService.fileNameUrlDownnloading)
-                    {
-                        <p>@item.Value - @item.Key</p>
+                <ul class="list-group" id="item-list">
+                    <!-- Example item with remove button -->
+                    @{
+                        foreach (var item in DownloadService.fileNameUrlDownnloading)
+                        {
+                            <li style="background:ivory" class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@item.fileName - @item.url</span>
+                                <button class="btn btn-danger btn-lg oi oi-delete" @onclick="() => cancelItem(item.url)"></button>
+                            </li>
+                        }
                     }
-                }
-            </div>
-        </div>
-    </div>
-}
-
-@{
-    if (DownloadService.fileNameUrlDownnloaded.Count != 0)
-    {
-        <hr />
-        <div class="card">
-            <div class="card-header">
-                Downloaded
-            </div>
-            <div class="card-body">
-                @{
-                    // var request = HttpContext.Request;
-                    // var _baseURL = $"{request.Scheme}://{request.Host}";
-
-                    foreach (var item in DownloadService.fileNameUrlDownnloaded)
-                    {
-                        // <a download href="@($@"{_baseURL}/{Program.downloadFolder}/{item}")">@item</a>
-                        <p><a download href="">@item</a></p>
-                    }
-                }
+                </ul>
             </div>
         </div>
     }
 }
 
+@{
+    if (DownloadService.fileNameUrlDownnloaded.Count != 0)
+    {
+        <br />
+        <div class="card">
+            <div class="card-header">
+                Downloaded
+            </div>
+            <div class="card-body">
+                <ul class="list-group" id="item-list">
+                    <!-- Example item with remove button -->
+                    @{
+                        foreach (var item in DownloadService.fileNameUrlDownnloaded)
+                        {
+                            <li style="background:cornsilk"  class="list-group-item d-flex justify-content-between align-items-center">
+                                <a download href="@($@"{_baseURL}/{Program.downloadFolder}/{item}")">@item</a>
+                                <button class="btn btn-danger btn-lg oi oi-delete" @onclick="() => deleteItem(item)"></button>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+}
 
 @code {
     // [Inject]
     // private IDownloadService downloadService { get; set; }
+
+    string _baseURL;
+
     private string currentLink { get; set; } = "";
 
     protected override async Task OnInitializedAsync()
@@ -73,18 +89,24 @@
         var files = new DirectoryInfo(Program.downloadRootPath).GetFiles();
         foreach (var item in files)
             DownloadService.fileNameUrlDownnloaded.Add(item.Name);
+
+        _baseURL = $"{httpContextAccessor.HttpContext.Request.Scheme}://{httpContextAccessor.HttpContext.Request.Host}";
     }
 
-    private async void IncrementCount()
+    private async void DownloadLink()
     {
         if (string.IsNullOrEmpty(currentLink))
             return;
+        await downloadService.DownloadFromUrlAsync(Program.downloadRootPath, currentLink, new Uri(currentLink).Segments.Last());
+        this.StateHasChanged();
+    }
 
-        var fileName = new Uri(currentLink).Segments.Last();
-        if (!DownloadService.fileNameUrlDownnloading.ContainsKey(currentLink))
-        {
-            DownloadService.fileNameUrlDownnloading.Add(currentLink, fileName);
-            await downloadService.DownloadFromUrlAsync(currentLink, fileName);
-        }
+    protected void cancelItem(string key)
+    {
+        DownloadService.removeDownloadingItem(key);
+    }
+    protected void deleteItem(string fileName)
+    {
+        DownloadService.removeDownloadedItem(fileName, Program.downloadRootPath);
     }
 }

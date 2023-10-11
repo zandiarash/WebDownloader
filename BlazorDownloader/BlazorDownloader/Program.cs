@@ -12,8 +12,13 @@ downloadRootPath = new PhysicalFileProvider(Path.Combine(builder.Environment.Con
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
+builder.Services.AddHttpContextAccessor();
+//builder.Services.AddSingleton<IHttpContextAccessor>(new HttpContextAccessor());
+
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<IDownloadService, DownloadService>();
+
 
 var app = builder.Build();
 
