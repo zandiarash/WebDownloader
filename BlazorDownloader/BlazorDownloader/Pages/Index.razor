@@ -36,7 +36,7 @@
                         foreach (var item in DownloadService.fileNameUrlDownnloading)
                         {
                             <li style="background:ivory" class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>@item.fileName -  @item.processPercent - @item.url</span>
+                                <span>@item.fileName - @item.url - @($"{item.processPercent:0.##}%")</span>
                                 <button class="btn btn-danger btn-lg oi oi-delete" @onclick="() => cancelItem(item.url)"></button>
                             </li>
                         }

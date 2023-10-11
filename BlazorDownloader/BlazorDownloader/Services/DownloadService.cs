@@ -35,7 +35,6 @@ public class DownloadService : IDownloadService
     }
     public static void removeDownloadedItem(string fileName, string downloadRootPath)
     {
-        // Clearing last downloaded fle
         fileNameUrlDownnloaded.Remove(fileName);
         var FileNamePath = Path.Combine(downloadRootPath, fileName);
         if (File.Exists(FileNamePath))
@@ -49,61 +48,104 @@ public class DownloadService : IDownloadService
 
         fileNameUrlDownnloading.Add(thisDownload);
 
-        string fileNamePath = Path.Combine(downloadRootPath, fileName);
+        string DestinationFilePath = Path.Combine(downloadRootPath, fileName);
 
-        removeDownloadedItem(fileName, fileNamePath);
+        // Clearing last downloaded file
+        removeDownloadedItem(fileName, DestinationFilePath);
 
-
-        // Downloadning
-        //var fileInfo = new FileInfo(fileNamePath);
-        //try
-        //{
-        //    //HttpClient client = new HttpClient();
-        //    //using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, thisDownload.cancellationTokenSource.Token);
-        //    //// You must use as stream to have control over buffering and number of bytes read/received
-        //    //using var stream = await response.Content.ReadAsStreamAsync();
-        //    //// Read/process bytes from stream as appropriate
-        //    //// Calculated by you based on how many bytes you have read.  Likely incremented within a loop.
-        //    //long bytesRecieved = 0;//...
-
-        //    //long? totalBytes = response.Content.Headers.ContentLength;
-        //    ////double? percentComplete = (double)bytesRecieved / totalBytes;
-        //    //thisDownload.processPercent = (double)bytesRecieved / totalBytes;
-        //    //// Do what you want with `percentComplete`
-        //    //stateChange();
-        //    //using var fileStream = fileInfo.OpenWrite();
-        //    //await stream.CopyToAsync(fileStream);
-        //}
-        //catch { }
-
-
-
-
-
-        HttpResponseMessage response = null;
         try
         {
-            response = await new HttpClient().GetAsync(url, thisDownload.cancellationTokenSource.Token);
-        }
-        catch { }
+            using var client = new HttpClient();
+            using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, thisDownload.cancellationTokenSource.Token);
 
-        if (response == null || !response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"HTTP error: {response.StatusCode}");
+                return false;
+            }
+
+            var contentLength = response.Content.Headers.ContentLength;
+
+            using var contentStream = await response.Content.ReadAsStreamAsync(thisDownload.cancellationTokenSource.Token);
+            using var fileStream = new FileStream(DestinationFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+
+            var totalBytesRead = 0L;
+            var buffer = new byte[8192];
+            var isMoreToRead = true;
+
+            do
+            {
+                if (thisDownload.cancellationTokenSource.IsCancellationRequested)
+                    break;
+                var bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length);
+                if (bytesRead == 0)
+                {
+                    isMoreToRead = false;
+                    continue;
+                }
+
+                await fileStream.WriteAsync(buffer, 0, bytesRead, thisDownload.cancellationTokenSource.Token);
+
+                totalBytesRead += bytesRead;
+                thisDownload.processPercent = totalBytesRead * 1d / contentLength.Value * 100;
+                //Console.WriteLine($"Downloaded {totalBytesRead} of {contentLength} bytes. {thisDownload.processPercent:0.##}% complete.");
+                stateChange();
+            } while (isMoreToRead && !thisDownload.cancellationTokenSource.IsCancellationRequested);
+
+            fileNameUrlDownnloaded.Add(fileName);
+        }
+        catch
         {
-            removeDownloadingItem(url);
-            return false;
         }
 
-        //Writing to file
-        var stream = await response.Content.ReadAsStreamAsync();
-        var fileInfo = new FileInfo(fileNamePath);
-        using var fileStream = fileInfo.OpenWrite();
-        await stream.CopyToAsync(fileStream);
-
-
-        fileNameUrlDownnloaded.Add(fileName);
         removeDownloadingItem(url);
-
         stateChange();
         return true;
     }
 }
+
+
+
+//HttpResponseMessage response = null;
+//try
+//{
+//    response = await new HttpClient().GetAsync(url, thisDownload.cancellationTokenSource.Token);
+//}
+//catch { }
+
+//if (response == null || !response.IsSuccessStatusCode)
+//{
+//    removeDownloadingItem(url);
+//    return false;
+//}
+
+////Writing to file
+//var stream = await response.Content.ReadAsStreamAsync();
+//var fileInfo = new FileInfo(fileNamePath);
+//using var fileStream = fileInfo.OpenWrite();
+//await stream.CopyToAsync(fileStream);
+
+
+
+
+// Downloadning
+//var fileInfo = new FileInfo(fileNamePath);
+//try
+//{
+//    //HttpClient client = new HttpClient();
+//    //using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, thisDownload.cancellationTokenSource.Token);
+//    //// You must use as stream to have control over buffering and number of bytes read/received
+//    //using var stream = await response.Content.ReadAsStreamAsync();
+//    //// Read/process bytes from stream as appropriate
+//    //// Calculated by you based on how many bytes you have read.  Likely incremented within a loop.
+//    //long bytesRecieved = 0;//...
+
+//    //long? totalBytes = response.Content.Headers.ContentLength;
+//    ////double? percentComplete = (double)bytesRecieved / totalBytes;
+//    //thisDownload.processPercent = (double)bytesRecieved / totalBytes;
+//    //// Do what you want with `percentComplete`
+//    //stateChange();
+//    //using var fileStream = fileInfo.OpenWrite();
+//    //await stream.CopyToAsync(fileStream);
+//}
+//catch { }
