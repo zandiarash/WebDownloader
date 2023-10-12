@@ -146,6 +146,15 @@
         }
 
         var fileName = uri.Segments.Last();
+
+
+        var prompted = await downloadService.PromptForDownloadAndDownloadAtLast(UpdateStateAndNotifyOthers, Program.downloadRootPath, currentLink, fileName);
+        if (!prompted)
+        {
+            ToastService.ShowWarning($"Max download of server riched, Please wait for other tasks to complete");
+            return;
+        }
+
         var res = await downloadService.DownloadFromUrlAsync(UpdateStateAndNotifyOthers, Program.downloadRootPath, currentLink, fileName);
 
         if (!res)

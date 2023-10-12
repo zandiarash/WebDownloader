@@ -23,50 +23,23 @@ public class Download
 public interface IDownloadService
 {
     public Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName);
+    public Task<bool> PromptForDownloadAndDownloadAtLast(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName);
 }
 public class DownloadService : IDownloadService
 {
     public static List<Download> fileNameUrlDownloading = new();
+    //public static List<Download> fileNameUrlDownloadingQueue = new();
     public static List<string> fileNameUrlDownnloaded = new();
-    public static async Task removeDownloadingItem(Func<Task<bool>> stateChange, string url, string downloadRootPath, bool removeFileAlso = false)
+    public async Task<bool> PromptForDownloadAndDownloadAtLast(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName)
     {
-        var item = fileNameUrlDownloading.FirstOrDefault(x => x.url == url);
-        if (item != null)
+        if (fileNameUrlDownloading.Count >= Program.downloadLimit)
         {
-            item.cancellationTokenSource.Cancel();
-            fileNameUrlDownloading.Remove(item);
-            var FileNamePath = Path.Combine(downloadRootPath, item.fileName);
-
-            if (removeFileAlso && File.Exists(FileNamePath))
-                await new TaskFactory().StartNew(() =>
-               {
-                   bool deleted = false;
-                   while (!deleted)
-                   {
-                       try
-                       {
-                           File.Delete(FileNamePath);
-                       }
-                       catch
-                       {
-                           Task.Delay(500);
-                       }
-                   }
-               });
+            var newDownload = new Download(url, fileName, new CancellationTokenSource());
+            //fileNameUrlDownloadingQueue.Add(newDownload);
+            return false;
         }
-        await stateChange();
-    }
-    public static async Task<bool> removeDownloadedItem(Func<Task<bool>> stateChange, string fileName, string downloadRootPath)
-    {
-        fileNameUrlDownnloaded.Remove(fileName);
-        var FileNamePath = Path.Combine(downloadRootPath, fileName);
-        if (File.Exists(FileNamePath))
-            File.Delete(FileNamePath);
-
-        await stateChange();
         return true;
     }
-
     public async Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName)
     {
         if (fileNameUrlDownloading.Any(x => x.url == url)) { return false; }
@@ -77,7 +50,7 @@ public class DownloadService : IDownloadService
         string DestinationFilePath = Path.Combine(downloadRootPath, fileName);
 
         // Clearing last downloaded file
-        await removeDownloadedItem(stateChange,fileName, DestinationFilePath);
+        await removeDownloadedItem(stateChange, fileName, DestinationFilePath);
 
         try
         {
@@ -87,7 +60,7 @@ public class DownloadService : IDownloadService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"HTTP error: {response.StatusCode}");
-                await removeDownloadingItem(stateChange,thisDownload.url, downloadRootPath);
+                await removeDownloadingItem(stateChange, thisDownload.url, downloadRootPath);
                 //await stateChange();
                 return false;
             }
@@ -129,6 +102,46 @@ public class DownloadService : IDownloadService
         await stateChange();
         return true;
     }
+
+    public static async Task removeDownloadingItem(Func<Task<bool>> stateChange, string url, string downloadRootPath, bool removeFileAlso = false)
+    {
+        var item = fileNameUrlDownloading.FirstOrDefault(x => x.url == url);
+        if (item != null)
+        {
+            item.cancellationTokenSource.Cancel();
+            fileNameUrlDownloading.Remove(item);
+            var FileNamePath = Path.Combine(downloadRootPath, item.fileName);
+
+            if (removeFileAlso && File.Exists(FileNamePath))
+                await new TaskFactory().StartNew(() =>
+               {
+                   bool deleted = false;
+                   while (!deleted)
+                   {
+                       try
+                       {
+                           File.Delete(FileNamePath);
+                       }
+                       catch
+                       {
+                           Task.Delay(500);
+                       }
+                   }
+               });
+        }
+        await stateChange();
+    }
+    public static async Task<bool> removeDownloadedItem(Func<Task<bool>> stateChange, string fileName, string downloadRootPath)
+    {
+        fileNameUrlDownnloaded.Remove(fileName);
+        var FileNamePath = Path.Combine(downloadRootPath, fileName);
+        if (File.Exists(FileNamePath))
+            File.Delete(FileNamePath);
+
+        await stateChange();
+        return true;
+    }
+
     public static string byteToRealSize(long bytes)
     {
         if (bytes == 0L) return "";
@@ -147,4 +160,5 @@ public class DownloadService : IDownloadService
         else
             return $"{(double)bytes / kilobyte:0.##} KB"; // default to KB if less than MB
     }
+
 }
