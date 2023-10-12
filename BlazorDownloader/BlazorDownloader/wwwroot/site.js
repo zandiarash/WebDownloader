@@ -1,4 +1,4 @@
-  window.downloadFileFromStream = async (fileName, contentStreamReference) => {
+window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     const arrayBuffer = await contentStreamReference.arrayBuffer();
     const blob = new Blob([arrayBuffer]);
     const url = URL.createObjectURL(blob);
@@ -8,4 +8,15 @@
     anchorElement.click();
     anchorElement.remove();
     URL.revokeObjectURL(url);
-  }
+};
+
+window.clipboardCopy = {
+    copyText: function (text) {
+        navigator.clipboard.writeText(text).then(function () {
+            console.log("Copied to clipboard!");
+        })
+            .catch(function (error) {
+                alert(error);
+            });
+    }
+};

@@ -5,6 +5,7 @@
 @inject Blazored.Toast.Services.IToastService ToastService
 @inject IJSRuntime JS
 
+
 <PageTitle>Download Platform</PageTitle>
 
 <div class="card">
@@ -23,36 +24,10 @@
 </div>
 
 
-@* @{
-    if (DownloadService.fileNameUrlDownloading.Count != 0)
-    {
-        <br />
-        <div class="card">
-            <div class="card-header">
-                Downloading
-            </div>
-            <div class="card-body">
-                <ul class="list-group" id="item-list">
-                    <!-- Example item with remove button -->
-                    @{
-                        foreach (var item in DownloadService.fileNameUrlDownloading)
-                        {
-                            <li style="background:ivory" class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>@item.fileName - @item.url @(item.processPercent == null ? "" : $" - {item.processPercent:0.##}%") @(item.downloadedSize == 0L ? "" : $" - {item.downloadedSize} bytes") / @($"{item.downloadFileSize ?? 0}"</span>
-                                <button class="btn btn-danger btn-lg oi oi-ban" @onclick="() => cancelItem(item.url)"></button>
-                            </li>
-                        }
-                    }
-                </ul>
-            </div>
-        </div>
-    }
-} *@
-
-
 @{
     if (DownloadService.fileNameUrlDownloading.Count != 0)
     {
+        <br />
         <div class="card">
             <div class="card-header">
                 Downloading
@@ -62,9 +37,10 @@
                     <table class="table table-striped ">
                         <thead>
                             <tr>
-                                <th scope="col">Link</th>
+                                <th scope="col">Copy download Link</th>
+                                <th scope="col">File Name</th>
                                 <th scope="col">Total Size</th>
-                                <th scope="col">Downloaded Size</th>
+                                <th scope="col">Downloaded Size</th>http://5.161.110.119/Downloadables/test.txt
                                 <th scope="col">Progress</th>
                                 <th scope="col">Cancel</th>
                             </tr>
@@ -74,8 +50,9 @@
                                 foreach (var item in DownloadService.fileNameUrlDownloading)
                                 {
                                     <tr>
-                                        <td class="w-50 text-break"><a href="@item.url">@item.fileName</a></td>
-                                        <td>@($"{item.downloadFileSize ?? 0}")</td>
+                                        <td><button class="btn btn-primary btn-lg oi oi-layers" @onclick="() => copyLinkToClipboard(item.url)"></button></td>
+                                        <td class="w-50 text-break">@item.fileName</td>
+                                        <td>@($"{item.downloadFileSize ?? 0} bytes")</td>
                                         <td>@(item.downloadedSize == 0L ? "" : $"{item.downloadedSize} bytes")</td>
                                         <td>@(item.processPercent == null ? "" : $"{item.processPercent:0.##}%") </td>
                                         <td><button class="btn btn-danger btn-lg oi oi-ban" @onclick="() => cancelItem(item.url)"></button></td>
@@ -89,7 +66,6 @@
         </div>
     }
 }
-
 @{
     if (DownloadService.fileNameUrlDownnloaded.Count != 0)
     {
@@ -104,9 +80,13 @@
                     @{
                         foreach (var item in DownloadService.fileNameUrlDownnloaded)
                         {
+                            var link = $@"{_baseURL}/{Program.downloadFolder}/{item}";
                             <li style="background:cornsilk" class="list-group-item d-flex justify-content-between align-items-center text-break">
-                                <a download href="@($@"{_baseURL}/{Program.downloadFolder}/{item}")">@item</a>
-                                <button class="btn btn-danger btn-lg oi oi-delete" @onclick="() => deleteItem(item)"></button>
+                                <a download href="@link">@item</a>
+                                <div>
+                                    <a download="" href="@link"><button class="btn btn-sucess btn-lg oi oi-data-transfer-download"></button></a>
+                                    <button class="btn btn-danger btn-lg oi oi-delete" @onclick="() => deleteItem(item)"></button>
+                                </div>
                             </li>
                         }
                     }
@@ -118,19 +98,17 @@
 
 @code {
     string _baseURL = string.Empty;
-
     private string currentLink { get; set; } = "";
-
     protected override async Task OnInitializedAsync()
     {
         DownloadService.fileNameUrlDownnloaded.Clear();
-        var files = new DirectoryInfo(Program.downloadRootPath).GetFiles();
+        // Dont Show file as downloaded while downloading
+        var files = new DirectoryInfo(Program.downloadRootPath).GetFiles().Where(f => !DownloadService.fileNameUrlDownloading.Any(x => x.fileName == f.Name));
         foreach (var item in files)
             DownloadService.fileNameUrlDownnloaded.Add(item.Name);
 
         _baseURL = $"{httpContextAccessor?.HttpContext?.Request.Scheme}://{httpContextAccessor?.HttpContext?.Request.Host}";
     }
-
     private async void DownloadLink()
     {
         if (string.IsNullOrEmpty(currentLink))
@@ -155,10 +133,13 @@
         if (!res)
             ToastService.ShowError($"Problem With Download {fileName}");
     }
-
-    protected void cancelItem(string key)
+    protected async Task copyLinkToClipboard(string text)
     {
-        DownloadService.removeDownloadingItem(key);
+        await JS.InvokeVoidAsync("clipboardCopy.copyText", text);
+    }
+    protected async Task cancelItem(string key)
+    {
+        await DownloadService.removeDownloadingItem(key, Program.downloadRootPath, removeFileAlso: false);
     }
     protected void deleteItem(string fileName)
     {

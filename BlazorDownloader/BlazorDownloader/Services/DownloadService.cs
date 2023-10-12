@@ -27,13 +27,31 @@ public class DownloadService : IDownloadService
 {
     public static List<Download> fileNameUrlDownloading = new();
     public static List<string> fileNameUrlDownnloaded = new();
-    public static void removeDownloadingItem(string url)
+    public static async Task removeDownloadingItem(string url, string downloadRootPath ,bool removeFileAlso=false)
     {
         var item = fileNameUrlDownloading.FirstOrDefault(x => x.url == url);
         if (item != null)
         {
             item.cancellationTokenSource.Cancel();
             fileNameUrlDownloading.Remove(item);
+            var FileNamePath = Path.Combine(downloadRootPath, item.fileName);
+
+            if (removeFileAlso && File.Exists(FileNamePath))
+                await new TaskFactory().StartNew(() =>
+               {
+                   bool deleted = false;
+                   while (!deleted)
+                   {
+                       try
+                       {
+                           File.Delete(FileNamePath);
+                       }
+                       catch
+                       {
+                           Task.Delay(500);
+                       }
+                   }
+               });
         }
     }
     public static void removeDownloadedItem(string fileName, string downloadRootPath)
@@ -48,6 +66,7 @@ public class DownloadService : IDownloadService
     {
         if (fileNameUrlDownloading.Any(x => x.url == url)) { return false; }
         var thisDownload = new Download(url, fileName, new CancellationTokenSource());
+
         fileNameUrlDownloading.Add(thisDownload);
 
         string DestinationFilePath = Path.Combine(downloadRootPath, fileName);
@@ -63,7 +82,7 @@ public class DownloadService : IDownloadService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"HTTP error: {response.StatusCode}");
-                removeDownloadingItem(thisDownload.url);
+                await removeDownloadingItem(thisDownload.url, downloadRootPath);
                 stateChange();
                 return false;
             }
@@ -100,7 +119,7 @@ public class DownloadService : IDownloadService
         {
         }
 
-        removeDownloadingItem(url);
+        await removeDownloadingItem(url, downloadRootPath);
         stateChange();
         return true;
     }
