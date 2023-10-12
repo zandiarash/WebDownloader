@@ -12,7 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 downloadRootPath = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, downloadFolder)).Root;
 
 builder.Services.AddBlazoredToast();
-builder.Services.AddSignalR();
 
 
 // Add services to the container.
@@ -23,6 +22,8 @@ builder.Services.AddHttpContextAccessor();
 //builder.Services.AddSingleton<IHttpContextAccessor>(new HttpContextAccessor());
 
 builder.Services.AddSingleton<IDownloadService, DownloadService>();
+builder.Services.AddSignalR();
+
 
 var app = builder.Build();
 

@@ -27,6 +27,7 @@
         <br />
         <center>
             <button @onclick="DownloadLink" class="btn btn-success ">Download To Server</button>
+            <button @onclick="UpdateStateAndNotifyOthers" class="btn btn-success ">test</button>
         </center>
     </div>
 </div>
@@ -127,6 +128,7 @@
             InvokeAsync(StateHasChanged);
         });
         await hubConnection.StartAsync();
+
     }
     private async void DownloadLink()
     {
@@ -167,7 +169,8 @@
     }
     private async Task UpdateStateAndNotifyOthers()
     {
-        await _hubContext.Clients.All.SendAsync("ReceiveMessage", "State has changed!");
+        if (hubConnection is not null)
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage","user", "State has changed!");
     }
 
 }
