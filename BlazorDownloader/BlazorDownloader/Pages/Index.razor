@@ -52,8 +52,8 @@
                                     <tr>
                                         <td><button class="btn btn-primary btn-lg oi oi-layers" @onclick="() => copyLinkToClipboard(item.url)"></button></td>
                                         <td class="w-50 text-break">@item.fileName</td>
-                                        <td>@($"{item.downloadFileSize ?? 0} bytes")</td>
-                                        <td>@(item.downloadedSize == 0L ? "" : $"{item.downloadedSize} bytes")</td>
+                                        <td>@DownloadService.byteToRealSize(item.downloadFileSize??0)</td>
+                                        <td>@DownloadService.byteToRealSize(item.downloadedSize)</td>
                                         <td>@(item.processPercent == null ? "" : $"{item.processPercent:0.##}%") </td>
                                         <td><button class="btn btn-danger btn-lg oi oi-ban" @onclick="() => cancelItem(item.url)"></button></td>
                                     </tr>

@@ -123,4 +123,22 @@ public class DownloadService : IDownloadService
         stateChange();
         return true;
     }
+    public static string byteToRealSize(long bytes)
+    {
+        if (bytes == 0L) return "";
+
+        const long kilobyte = 1024;
+        const long megabyte = kilobyte * 1024;
+        const long gigabyte = megabyte * 1024;
+        const long terabyte = gigabyte * 1024;
+
+        if (bytes >= terabyte)
+            return $"{(double)bytes / terabyte:0.##} TB";
+        else if (bytes >= gigabyte)
+            return $"{(double)bytes / gigabyte:0.##} GB";
+        else if (bytes >= megabyte)
+            return $"{(double)bytes / megabyte:0.##} MB";
+        else
+            return $"{(double)bytes / kilobyte:0.##} KB"; // default to KB if less than MB
+    }
 }
