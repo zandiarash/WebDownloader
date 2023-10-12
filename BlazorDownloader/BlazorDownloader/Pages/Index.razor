@@ -1,9 +1,17 @@
 ﻿@page "/"
 @using System.Text;
+@using BlazorDownloader.Hubs;
+@using Microsoft.AspNetCore.SignalR;
+@using Microsoft.AspNetCore.SignalR.Client;
 @inject IDownloadService downloadService
 @inject IHttpContextAccessor httpContextAccessor
 @inject Blazored.Toast.Services.IToastService ToastService
 @inject IJSRuntime JS
+@inject IHubContext<GlobalHub> _hubContext
+@inject NavigationManager Navigation
+
+
+
 
 
 <PageTitle>Download Platform</PageTitle>
@@ -97,6 +105,7 @@
 }
 
 @code {
+    private HubConnection? hubConnection;
     string _baseURL = string.Empty;
     private string currentLink { get; set; } = "";
     protected override async Task OnInitializedAsync()
@@ -108,6 +117,16 @@
             DownloadService.fileNameUrlDownnloaded.Add(item.Name);
 
         _baseURL = $"{httpContextAccessor?.HttpContext?.Request.Scheme}://{httpContextAccessor?.HttpContext?.Request.Host}";
+
+        hubConnection = new HubConnectionBuilder()
+             .WithUrl(Navigation.ToAbsoluteUri("/GlobalHub"))
+             .Build();
+
+        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        {
+            InvokeAsync(StateHasChanged);
+        });
+        await hubConnection.StartAsync();
     }
     private async void DownloadLink()
     {
@@ -129,7 +148,8 @@
         }
 
         var fileName = uri.Segments.Last();
-        var res = await downloadService.DownloadFromUrlAsync(() => { this.StateHasChanged(); return true; }, Program.downloadRootPath, currentLink, fileName);
+        var res = await downloadService.DownloadFromUrlAsync(async () => { this.StateHasChanged(); await UpdateStateAndNotifyOthers(); return true; }, Program.downloadRootPath, currentLink, fileName);
+
         if (!res)
             ToastService.ShowError($"Problem With Download {fileName}");
     }
@@ -139,12 +159,17 @@
     }
     protected async Task cancelItem(string key)
     {
-        await DownloadService.removeDownloadingItem(key, Program.downloadRootPath, removeFileAlso: false);
+        await DownloadService.removeDownloadingItem(key, Program.downloadRootPath, removeFileAlso: true);
     }
     protected void deleteItem(string fileName)
     {
         DownloadService.removeDownloadedItem(fileName, Program.downloadRootPath);
     }
+    private async Task UpdateStateAndNotifyOthers()
+    {
+        await _hubContext.Clients.All.SendAsync("ReceiveMessage", "State has changed!");
+    }
+
 }
 
 

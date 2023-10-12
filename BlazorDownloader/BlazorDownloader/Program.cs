@@ -1,6 +1,8 @@
+using BlazorDownloader.Hubs;
 using Blazored.Toast;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.FileProviders;
 
 configurations = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
@@ -10,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 downloadRootPath = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, downloadFolder)).Root;
 
 builder.Services.AddBlazoredToast();
+builder.Services.AddSignalR();
 
 
 // Add services to the container.
@@ -51,6 +54,7 @@ app.UseDirectoryBrowser(new DirectoryBrowserOptions
 app.UseRouting();
 
 app.MapBlazorHub();
+app.MapHub<GlobalHub>("/GlobalHub");
 app.MapFallbackToPage("/_Host");
 
 app.Run();

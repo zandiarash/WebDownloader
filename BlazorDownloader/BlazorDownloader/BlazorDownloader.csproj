@@ -18,6 +18,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="Blazored.Toast" Version="4.1.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.12" />
 	</ItemGroup>
 
 </Project>

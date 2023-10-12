@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading;
 
+
 public class Download
 {
     public Download(string _url, string _fileName, CancellationTokenSource _cancellationTokenSource)
@@ -21,13 +22,13 @@ public class Download
 
 public interface IDownloadService
 {
-    public Task<bool> DownloadFromUrlAsync(Func<bool> stateChange, string downloadRootPath, string url, string fileName);
+    public Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName);
 }
 public class DownloadService : IDownloadService
 {
     public static List<Download> fileNameUrlDownloading = new();
     public static List<string> fileNameUrlDownnloaded = new();
-    public static async Task removeDownloadingItem(string url, string downloadRootPath ,bool removeFileAlso=false)
+    public static async Task removeDownloadingItem(string url, string downloadRootPath, bool removeFileAlso = false)
     {
         var item = fileNameUrlDownloading.FirstOrDefault(x => x.url == url);
         if (item != null)
@@ -62,7 +63,7 @@ public class DownloadService : IDownloadService
             File.Delete(FileNamePath);
     }
 
-    public async Task<bool> DownloadFromUrlAsync(Func<bool> stateChange, string downloadRootPath, string url, string fileName)
+    public async Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName)
     {
         if (fileNameUrlDownloading.Any(x => x.url == url)) { return false; }
         var thisDownload = new Download(url, fileName, new CancellationTokenSource());
@@ -83,7 +84,7 @@ public class DownloadService : IDownloadService
             {
                 Console.WriteLine($"HTTP error: {response.StatusCode}");
                 await removeDownloadingItem(thisDownload.url, downloadRootPath);
-                stateChange();
+                await stateChange();
                 return false;
             }
 
@@ -98,7 +99,7 @@ public class DownloadService : IDownloadService
             do
             {
                 if (thisDownload.cancellationTokenSource.IsCancellationRequested)
-                    break;
+                    return false;
                 var bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length);
                 if (bytesRead == 0)
                 {
@@ -110,17 +111,18 @@ public class DownloadService : IDownloadService
 
                 thisDownload.downloadedSize += bytesRead;
                 thisDownload.processPercent = thisDownload.downloadedSize * 1d / (thisDownload.downloadFileSize ?? 0) * 100;
-                stateChange();
+                await stateChange();
             } while (isMoreToRead && !thisDownload.cancellationTokenSource.IsCancellationRequested);
 
-            fileNameUrlDownnloaded.Add(fileName);
+            if (!thisDownload.cancellationTokenSource.IsCancellationRequested)
+                fileNameUrlDownnloaded.Add(fileName);
         }
         catch
         {
         }
 
         await removeDownloadingItem(url, downloadRootPath);
-        stateChange();
+        await stateChange();
         return true;
     }
     public static string byteToRealSize(long bytes)
