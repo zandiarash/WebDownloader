@@ -1,4 +1,3 @@
-using BlazorDownloader.Data;
 using Blazored.Toast;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -20,7 +19,6 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpContextAccessor();
 //builder.Services.AddSingleton<IHttpContextAccessor>(new HttpContextAccessor());
 
-builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<IDownloadService, DownloadService>();
 
 var app = builder.Build();
