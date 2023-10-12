@@ -477,3 +477,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 /BlazorDownloader/BlazorDownloader/Downloadables/test.txt
+/BlazorDownloader/BlazorDownloader/Areas/Identity/Pages
