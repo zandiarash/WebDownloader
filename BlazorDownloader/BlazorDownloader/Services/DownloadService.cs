@@ -28,7 +28,7 @@ public class DownloadService : IDownloadService
 {
     public static List<Download> fileNameUrlDownloading = new();
     public static List<string> fileNameUrlDownnloaded = new();
-    public static async Task removeDownloadingItem(string url, string downloadRootPath, bool removeFileAlso = false)
+    public static async Task removeDownloadingItem(Func<Task<bool>> stateChange, string url, string downloadRootPath, bool removeFileAlso = false)
     {
         var item = fileNameUrlDownloading.FirstOrDefault(x => x.url == url);
         if (item != null)
@@ -54,13 +54,17 @@ public class DownloadService : IDownloadService
                    }
                });
         }
+        await stateChange();
     }
-    public static void removeDownloadedItem(string fileName, string downloadRootPath)
+    public static async Task<bool> removeDownloadedItem(Func<Task<bool>> stateChange, string fileName, string downloadRootPath)
     {
         fileNameUrlDownnloaded.Remove(fileName);
         var FileNamePath = Path.Combine(downloadRootPath, fileName);
         if (File.Exists(FileNamePath))
             File.Delete(FileNamePath);
+
+        await stateChange();
+        return true;
     }
 
     public async Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName)
@@ -73,7 +77,7 @@ public class DownloadService : IDownloadService
         string DestinationFilePath = Path.Combine(downloadRootPath, fileName);
 
         // Clearing last downloaded file
-        removeDownloadedItem(fileName, DestinationFilePath);
+        await removeDownloadedItem(stateChange,fileName, DestinationFilePath);
 
         try
         {
@@ -83,8 +87,8 @@ public class DownloadService : IDownloadService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"HTTP error: {response.StatusCode}");
-                await removeDownloadingItem(thisDownload.url, downloadRootPath);
-                await stateChange();
+                await removeDownloadingItem(stateChange,thisDownload.url, downloadRootPath);
+                //await stateChange();
                 return false;
             }
 
@@ -121,7 +125,7 @@ public class DownloadService : IDownloadService
         {
         }
 
-        await removeDownloadingItem(url, downloadRootPath);
+        await removeDownloadingItem(stateChange, url, downloadRootPath);
         await stateChange();
         return true;
     }

@@ -123,7 +123,7 @@
              .WithUrl(Navigation.ToAbsoluteUri("/GlobalHub"))
              .Build();
 
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        hubConnection.On<string>("ReceiveMessage", (message) =>
         {
             InvokeAsync(StateHasChanged);
         });
@@ -150,7 +150,7 @@
         }
 
         var fileName = uri.Segments.Last();
-        var res = await downloadService.DownloadFromUrlAsync(async () => { this.StateHasChanged(); await UpdateStateAndNotifyOthers(); return true; }, Program.downloadRootPath, currentLink, fileName);
+        var res = await downloadService.DownloadFromUrlAsync(UpdateStateAndNotifyOthers, Program.downloadRootPath, currentLink, fileName);
 
         if (!res)
             ToastService.ShowError($"Problem With Download {fileName}");
@@ -161,16 +161,18 @@
     }
     protected async Task cancelItem(string key)
     {
-        await DownloadService.removeDownloadingItem(key, Program.downloadRootPath, removeFileAlso: true);
+        await DownloadService.removeDownloadingItem(UpdateStateAndNotifyOthers, key, Program.downloadRootPath, removeFileAlso: true);
     }
-    protected void deleteItem(string fileName)
+    protected async Task deleteItem(string fileName)
     {
-        DownloadService.removeDownloadedItem(fileName, Program.downloadRootPath);
+        await DownloadService.removeDownloadedItem(UpdateStateAndNotifyOthers, fileName, Program.downloadRootPath);
     }
-    private async Task UpdateStateAndNotifyOthers()
+    private async Task<bool> UpdateStateAndNotifyOthers()
     {
+        this.StateHasChanged();
         if (hubConnection is not null)
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage","user", "State has changed!");
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", "State has changed!");
+        return true;
     }
 
 }
