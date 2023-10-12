@@ -48,7 +48,6 @@ public class DownloadService : IDownloadService
     {
         if (fileNameUrlDownloading.Any(x => x.url == url)) { return false; }
         var thisDownload = new Download(url, fileName, new CancellationTokenSource());
-
         fileNameUrlDownloading.Add(thisDownload);
 
         string DestinationFilePath = Path.Combine(downloadRootPath, fileName);

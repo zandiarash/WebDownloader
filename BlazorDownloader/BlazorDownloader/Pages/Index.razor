@@ -50,63 +50,41 @@
 } *@
 
 
-<div class="card">
-    <div class="card-header">
-        Downloading
-    </div>
-    <div class="card-body">
-        <div class=" table-responsive">
-            <table class="table table-striped ">
-                <thead>
-                    <tr>
-                        <th scope="col">Link</th>
-                        <th scope="col">Total Size</th>
-                        <th scope="col">Downloaded Size</th>
-                        <th scope="col">Progress</th>
-                        <th scope="col">Cancel</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Mark</td>
-                        <td class="w-50 text-break">MarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMark</td>
-                        <td>Mark</td>
-                        <td>Mark</td>
-                        <td>Mark</td>
-                    </tr>
-                   @*  <tr>
-                        <td>Mark</td>
-                        <td style="word-wrap: break-word;min-width: 160px;max-width: 160px;">MarkMarkMarkMarkMarkMarkMarkrkMarkMarkMarkMarkMkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMarkMark</td>
-                        <td>Mark</td>
-                        <td>Mark</td>
-                        <td>Mark</td>
-                    </tr> *@
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
 @{
     if (DownloadService.fileNameUrlDownloading.Count != 0)
     {
-        <br />
         <div class="card">
             <div class="card-header">
                 Downloading
             </div>
             <div class="card-body">
-                <ul class="list-group" id="item-list">
-                    <!-- Example item with remove button -->
-                    @{
-                        foreach (var item in DownloadService.fileNameUrlDownloading)
-                        {
-                            <li style="background:ivory" class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>@item.fileName - @item.url @(item.processPercent == null ? "" : $" - {item.processPercent:0.##}%") @(item.downloadedSize == 0L ? "" : $" - {item.downloadedSize} bytes") / @($"{item.downloadFileSize ?? 0}")</span>
-                                <button class="btn btn-danger btn-lg oi oi-ban" @onclick="() => cancelItem(item.url)"></button>
-                            </li>
-                        }
-                    }
-                </ul>
+                <div class=" table-responsive">
+                    <table class="table table-striped ">
+                        <thead>
+                            <tr>
+                                <th scope="col">Link</th>
+                                <th scope="col">Total Size</th>
+                                <th scope="col">Downloaded Size</th>
+                                <th scope="col">Progress</th>
+                                <th scope="col">Cancel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                foreach (var item in DownloadService.fileNameUrlDownloading)
+                                {
+                                    <tr>
+                                        <td class="w-50 text-break"><a href="@item.url">@item.fileName</a></td>
+                                        <td>@($"{item.downloadFileSize ?? 0}")</td>
+                                        <td>@(item.downloadedSize == 0L ? "" : $"{item.downloadedSize} bytes")</td>
+                                        <td>@(item.processPercent == null ? "" : $"{item.processPercent:0.##}%") </td>
+                                        <td><button class="btn btn-danger btn-lg oi oi-ban" @onclick="() => cancelItem(item.url)"></button></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     }
@@ -126,7 +104,7 @@
                     @{
                         foreach (var item in DownloadService.fileNameUrlDownnloaded)
                         {
-                            <li style="background:cornsilk" class="list-group-item d-flex justify-content-between align-items-center">
+                            <li style="background:cornsilk" class="list-group-item d-flex justify-content-between align-items-center text-break">
                                 <a download href="@($@"{_baseURL}/{Program.downloadFolder}/{item}")">@item</a>
                                 <button class="btn btn-danger btn-lg oi oi-delete" @onclick="() => deleteItem(item)"></button>
                             </li>
