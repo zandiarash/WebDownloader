@@ -38,10 +38,10 @@
                         <thead>
                             <tr>
                                 <th scope="col">Copy download Link</th>
-                                <th scope="col">File Name</th>
-                                <th scope="col">Total Size</th>
-                                <th scope="col">Downloaded Size</th>
-                                <th scope="col">Progress</th>
+                                <th class="text-center" scope="col">File Name</th>
+                                <th class="text-center" scope="col">Total Size</th>
+                                <th class="text-center" scope="col">Downloaded Size</th>
+                                <th class="text-center" scope="col">Progress</th>
                                 <th scope="col">Cancel</th>
                             </tr>
                         </thead>
@@ -51,10 +51,10 @@
                                 {
                                     <tr>
                                         <td><button class="btn btn-primary btn-lg oi oi-layers" @onclick="() => copyLinkToClipboard(item.url)"></button></td>
-                                        <td class="w-50 text-break">@item.fileName</td>
-                                        <td>@DownloadService.byteToRealSize(item.downloadFileSize??0)</td>
-                                        <td>@DownloadService.byteToRealSize(item.downloadedSize)</td>
-                                        <td>@(item.processPercent == null ? "" : $"{item.processPercent:0.##}%") </td>
+                                        <td class="w-50 text-break text-center">@item.fileName</td>
+                                        <td class="text-center">@DownloadService.byteToRealSize(item.downloadFileSize??0)</td>
+                                        <td class="text-center">@DownloadService.byteToRealSize(item.downloadedSize)</td>
+                                        <td class="text-center">@(item.processPercent == null ? "" : $"{item.processPercent:0.##}%") </td>
                                         <td><button class="btn btn-danger btn-lg oi oi-ban" @onclick="() => cancelItem(item.url)"></button></td>
                                     </tr>
                                 }
