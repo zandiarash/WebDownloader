@@ -159,7 +159,7 @@
         var prompted = await downloadService.PromptForDownloadAndDownloadAtLast(UpdateStateAndNotifyOthers, Program.downloadRootPath, currentLink, fileName);
         if (!prompted)
         {
-            ToastService.ShowWarning($"Max download of server riched, Please wait for other tasks to complete");
+            ToastService.ShowWarning($"Max download of server reached, Please wait for other tasks to complete");
             return;
         }
 

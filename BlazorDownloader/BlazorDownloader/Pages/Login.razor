@@ -1,22 +1,56 @@
 ﻿@page "/Login"
 @using System.Text;
-@using BlazorDownloader.Hubs;
-@using Microsoft.AspNetCore.SignalR;
-@using Microsoft.AspNetCore.SignalR.Client;
+@using BlazorCaptcha
+@inject IJSRuntime JS
+@inject Blazored.Toast.Services.IToastService ToastService
 
+<link href="_content/BlazorCaptcha/captcha.css" rel="stylesheet" />
 
-<MudText Typo="Typo.h6">MudBlazor is @Text</MudText>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ButtonOnClick">@ButtonText</MudButton>
+<h3>Captcha Test</h3>
+<Captcha @bind-CaptchaWord="@Captcha" CharNumber="@CaptchaLetters" />
+<br />
+<MudTextField Style="{enabled }" @bind-Value="enteredCaptcha"
+              For="@(() => enteredCaptcha)"
+              Label="Captcha" />
+<br />
+
+<MudButton Disabled="@disabledButton" Variant="Variant.Filled" Color="Color.Primary" OnClick="CheckCaptcha">Test</MudButton>
 
 @code {
-    public string Text { get; set; } = "????";
-    public string ButtonText { get; set; } = "Click Me";
-    public int ButtonClicked { get; set; }
-
-    void ButtonOnClick()
+    private byte wrongAttempts = 0;
+    private bool disabledButton = true;
+    private string Captcha = "";
+    private int CaptchaLetters = 5;
+    private string enteredCaptcha = "";
+    protected override Task OnInitializedAsync()
     {
-        ButtonClicked += 1;
-        Text = $"Awesome x {ButtonClicked}";
-        ButtonText = "Click Me Again";
+        Captcha = BlazorCaptcha.Tools.GetCaptchaWord(CaptchaLetters);
+        return base.OnInitializedAsync();
+    }
+    public async void CheckCaptcha()
+    {
+        var texts = enteredCaptcha.Split("-");
+        if (texts.Count() == 2 && texts[0].Trim().ToLower() == Captcha.Trim().ToLower() && texts[1] == Program.Credentials)
+        {
+            await JS.InvokeVoidAsync("console.log", "1");
+        }
+        else
+        {
+            wrongAttempts++;
+            if (wrongAttempts >= 3)
+            {
+                await JS.InvokeVoidAsync("console.log", "Wrong attempts exceeds");
+                disabledButton = true;
+                ToastService.ShowWarning($"You entered wrong captcha more than 3, Wait for 5 minutes and try again");
+                await new TaskFactory().StartNew(() =>
+                {
+                    Task.Delay(300000);
+                });
+                disabledButton = false;
+                wrongAttempts = 0;
+            }
+            Captcha = BlazorCaptcha.Tools.GetCaptchaWord(CaptchaLetters);
+            await JS.InvokeVoidAsync("console.log", "0");
+        }
     }
 }
