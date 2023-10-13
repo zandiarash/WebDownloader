@@ -9,6 +9,37 @@
 @inject IJSRuntime JS
 @inject IHubContext<GlobalHub> _hubContext
 @inject NavigationManager Navigation
+@inject NavigationManager NavigationManager
+
+
+@* <table class="table table-striped ">
+    <thead>
+        <tr>
+            <th scope="col">Copy download Link</th>
+            <th class="text-center" scope="col">File Name</th>
+            <th class="text-center" scope="col">Total Size</th>
+            <th class="text-center" scope="col">Downloaded Size</th>
+            <th class="text-center" scope="col">Progress</th>
+            <th scope="col">Cancel</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="6">
+                <MudProgressLinear Color="Color.Primary" Value="@Value" Class="my-7" />
+            </td>
+        </tr>
+        <tr>
+            <td><button class="btn btn-primary btn-lg oi oi-layers"></button></td>
+            <td class="w-50 text-break text-center">----</td>
+            <td class="text-center">----</td>
+            <td class="text-center">-----</td>
+            <td class="text-center">--------------</td>
+            <td><button class="btn btn-danger btn-lg oi oi-ban" ></button></td>
+        </tr>
+    </tbody>
+</table> *@
+
 
 
 <PageTitle>Download Platform</PageTitle>
@@ -54,6 +85,11 @@
                             @{
                                 foreach (var item in DownloadService.fileNameUrlDownloading)
                                 {
+                                    <tr>
+                                        <td colspan="6">
+                                            <MudProgressLinear Color="Color.Primary" Value="@(item.processPercent ?? 0)" Class="my-7" />
+                                        </td>
+                                    </tr>
                                     <tr>
                                         <td><button class="btn btn-primary btn-lg oi oi-layers" @onclick="() => copyLinkToClipboard(item.url)"></button></td>
                                         <td class="w-50 text-break text-center">@item.fileName</td>
@@ -107,6 +143,9 @@
     private string currentLink { get; set; } = "";
     protected override async Task OnInitializedAsync()
     {
+        // If NotLoggedIn
+        //NavigationManager.NavigateTo("Login");
+
         DownloadService.fileNameUrlDownnloaded.Clear();
         // Dont Show file as downloaded while downloading
         var files = new DirectoryInfo(Program.downloadRootPath).GetFiles().Where(f => !DownloadService.fileNameUrlDownloading.Any(x => x.fileName == f.Name));
