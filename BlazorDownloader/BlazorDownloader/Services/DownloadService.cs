@@ -23,18 +23,18 @@ public class Download
 public interface IDownloadService
 {
     public Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName);
-    public Task<bool> PromptForDownloadAndDownloadAtLast(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName);
+    public bool PromptForDownloadAndDownloadAtLast(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName);
 }
 public class DownloadService : IDownloadService
 {
     public static List<Download> fileNameUrlDownloading = new();
     //public static List<Download> fileNameUrlDownloadingQueue = new();
     public static List<string> fileNameUrlDownnloaded = new();
-    public async Task<bool> PromptForDownloadAndDownloadAtLast(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName)
+    public bool PromptForDownloadAndDownloadAtLast(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName)
     {
         if (fileNameUrlDownloading.Count >= Program.downloadLimit)
         {
-            var newDownload = new Download(url, fileName, new CancellationTokenSource());
+            //var newDownload = new Download(url, fileName, new CancellationTokenSource());
             //fileNameUrlDownloadingQueue.Add(newDownload);
             return false;
         }
@@ -113,7 +113,7 @@ public class DownloadService : IDownloadService
             var FileNamePath = Path.Combine(downloadRootPath, item.fileName);
 
             if (removeFileAlso && File.Exists(FileNamePath))
-                await new TaskFactory().StartNew(() =>
+               await new TaskFactory().StartNew(async () =>
                {
                    bool deleted = false;
                    while (!deleted)
@@ -124,7 +124,7 @@ public class DownloadService : IDownloadService
                        }
                        catch
                        {
-                           Task.Delay(500);
+                           await Task.Delay(500);
                        }
                    }
                });
