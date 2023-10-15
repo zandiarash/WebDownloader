@@ -59,12 +59,20 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><button class="btn btn-primary btn-lg oi oi-layers" @onclick="() => copyLinkToClipboard(item.url)"></button></td>
+                                        <td>
+                                            <MudLink download @onclick="() => copyLinkToClipboard(item.url)">
+                                                <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Reddit" Color="Color.Default" Size="Size.Large" />
+                                            </MudLink>
+                                        </td>
                                         <td class="w-50 text-break text-center">@item.fileName</td>
                                         <td class="text-center">@DownloadService.byteToRealSize(item.downloadFileSize??0)</td>
                                         <td class="text-center">@DownloadService.byteToRealSize(item.downloadedSize)</td>
                                         <td class="text-center">@(item.processPercent == null ? "" : $"{item.processPercent:0.##}%") </td>
-                                        <td><button class="btn btn-danger btn-lg oi oi-ban" @onclick="() => cancelItem(item.url)"></button></td>
+                                        <td>
+                                            <MudLink download @onclick="() =>  cancelItem(item.url)">
+                                                <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
+                                            </MudLink>
+                                        </td>
                                     </tr>
                                 }
                             }
@@ -93,8 +101,12 @@
                             <li style="background:cornsilk" class="list-group-item d-flex justify-content-between align-items-center text-break">
                                 <a download href="@link">@item</a>
                                 <div>
-                                    <a class="btn btn-sucess btn-lg oi oi-data-transfer-download" download href="@link"></a>
-                                    <button class="btn btn-danger btn-lg oi oi-delete" @onclick="() => deleteItem(item)"></button>
+                                    <MudLink download href="@link">
+                                        <MudIcon Icon="@Icons.Material.Filled.Download" Title="Reddit" Color="Color.Success" Size="Size.Large" />
+                                    </MudLink>
+                                    <MudLink download @onclick="() => deleteItem(item)">
+                                        <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
+                                    </MudLink>
                                 </div>
                             </li>
                         }
@@ -111,8 +123,10 @@
     private string currentLink { get; set; } = "";
     protected override async Task OnInitializedAsync()
     {
+#if !DEBUG
         if (!Program.thisUser.canUse)
             NavigationManager.NavigateTo("Login");
+#endif
 
         DownloadService.fileNameUrlDownnloaded.Clear();
         // Dont Show file as downloaded while downloading

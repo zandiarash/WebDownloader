@@ -26,25 +26,38 @@
     </CloseButtonContent>
 </BlazoredToasts>
 
-<div class="page">
-    <div class="sidebar">
+<MudLayout>
+    <MudAppBar Elevation="0">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudSpacer />
+       @*  <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Href="https://mudblazor.com/" Target="_blank" />
+        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" /> *@
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">BlazorDownloader</MudText>
+        </MudDrawerHeader>
         <NavMenu />
-    </div>
-
-    <main>
-        <article class="content px-4">
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
             @Body
-        </article>
-    </main>
+            <MudAppBar class="align-center" Color="Color.Primary" Bottom="true" Fixed="true" Elevation="1" Dense=true>
+                <MudSpacer />
+                <span class="align-center">
+                    © 2023 Copyright:
+                    <a class="text-dark" href="https://T.me/ArashZandi">Arash Zandi</a>
+                </span>
+            </MudAppBar>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
-    
-</div>
+@code {
+    bool _drawerOpen = true;
 
-<footer class="footer bg-light text-center text-lg-start">
-    <!-- Copyright -->
-    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
-        © 2023 Copyright:
-        <a class="text-dark" href="https://T.me/ArashZandi">Arash Zandi</a>
-    </div>
-    <!-- Copyright -->
-</footer>
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}
