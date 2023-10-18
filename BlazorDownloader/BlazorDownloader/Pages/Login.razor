@@ -112,6 +112,7 @@
         }
         else
         {
+            Captcha = BlazorCaptcha.Tools.GetCaptchaWord(CaptchaLetters);
             Program.thisUser.wrongAttempts++;
             if (Program.thisUser.wrongAttempts > 3)
             {
