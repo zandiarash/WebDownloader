@@ -3,6 +3,7 @@
 @using BlazorDownloader.Hubs;
 @using Microsoft.AspNetCore.SignalR;
 @using Microsoft.AspNetCore.SignalR.Client;
+@using BlazorDownloader.Components;
 @inject IDownloadService downloadService
 @inject IHttpContextAccessor httpContextAccessor
 @inject Blazored.Toast.Services.IToastService ToastService
@@ -24,6 +25,26 @@
         <center>
             <button @onclick="DownloadLink" class="btn btn-success ">Download To Server</button>
         </center>
+    </div>
+</div>
+<br />
+
+<div class="card">
+    <div class="card-header">
+        Upload To Server
+    </div>
+    <div class="card-body">
+        <Uploader/>
+    </div>
+</div>
+<br />
+
+<div class="card">
+    <div class="card-header">
+        Upload To Server
+    </div>
+    <div class="card-body">
+        <UploadFile/>
     </div>
 </div>
 

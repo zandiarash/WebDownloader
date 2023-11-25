@@ -32,6 +32,7 @@ builder.Services.AddHttpContextAccessor();
 //builder.Services.AddSingleton<IHttpContextAccessor>(new HttpContextAccessor());
 
 builder.Services.AddSingleton<IDownloadService, DownloadService>();
+builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSignalR();
 
 
