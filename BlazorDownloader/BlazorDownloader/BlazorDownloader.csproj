@@ -17,11 +17,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Bit.BlazorUI" Version="8.1.0" />
-	  <PackageReference Include="BlazorCaptcha" Version="1.4.1" />
-	  <PackageReference Include="Blazored.Toast" Version="4.1.0" />
-	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.12" />
-	  <PackageReference Include="MudBlazor" Version="6.11.0" />
+	  <PackageReference Include="BlazorCaptcha" Version="1.6.0" />
+	  <PackageReference Include="Blazored.Toast" Version="4.2.1" />
+	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.8" />
+	  <PackageReference Include="MudBlazor" Version="7.6.0" />
 	</ItemGroup>
 
 </Project>

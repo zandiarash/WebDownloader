@@ -1,293 +1,94 @@
-﻿@using Bit.BlazorUI
-<style>
-    .browse-file {
-        border: 1px solid #D2D2D7;
-        border-radius: 2px;
-        padding: 24px;
-        width: 420px;
-        height: 200px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 50px;
-        cursor: pointer;
-    }
+﻿@inject ISnackbar Snackbar
 
-    .browse-file-header {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        font-size: 16px;
-    }
-
-    .browse-file-header i {
-        font-size: 24px;
-        font-weight: 700;
-        color: #0072CE;
-    }
-
-    .browse-file-header strong {
-        color: #0072CE;
-    }
-
-    .browse-file-footer {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        font-size: 12px;
-        color: #78787D;
-    }
-
-    .file-list {
-        border: 1px solid #D2D2D7;
-        border-radius: 2px;
-        padding: 24px;
-        width: 420px;
-        height: 200px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-    .file-info {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .file-info-name {
-        overflow: hidden;
-        margin-right: 10px;
-    }
-
-    .file-info-title {
-        color: #5A5A5F;
-        line-height: 22px;
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .file-info-subtitle {
-        color: #909096;
-    }
-
-    .file-info-ico {
-        border: 1px solid #F3F3F8;
-        border-radius: 2px;
-        background-color: #F3F3F8;
-        width: 80px;
-        height: 80px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .file-info-ico i {
-        font-size: 24px;
-    }
-
-    .file-info-data {
-        width: 275px;
-    }
-
-    .file-info-btns {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-    }
-
-    .file-info-btns i {
-        display: block;
-        cursor: pointer;
-    }
-
-    .file-info-btns .upload-ico {
-        color: #0072CE;
-    }
-
-    .file-info-btns .remove-ico {
-        color: #F9423A;
-    }
-
-    .file-info-progressbar-container {
-        width: 100%;
-        overflow: hidden;
-        height: 2px;
-        margin-top: 24px;
-        background-color: #D9D9D9;
-    }
-
-    .file-info-progressbar {
-        height: 2px;
-        transition: width 0.15s linear 0s;
-        background-color: #0072CE;
-    }
-
-    .file-info-s-msg {
-        margin-top: 12px;
-        color: #5EB227;
-    }
-
-    .file-info-e-msg {
-        margin-top: 12px;
-        color: #F9423A;
-    }
-
-    .file-list-footer {
-        font-size: 12px;
-        color: #78787D;
-    }
-
-</style>
-
-<BitFileUpload @ref="bitFileUpload"
-                Label=""
-                UploadUrl="@NonChunkedUploadUrl"
-                RemoveUrl="@RemoveUrl"
-                MaxSize="1024 * 1024 * 2"
-                AllowedExtensions="@(new List<string> { ".jpeg", ".jpg", ".png", ".bpm" })"
-                SuccessfulUploadMessage="File upload succeeded"
-                NotAllowedExtensionErrorMessage="File type not supported">
-    <LabelTemplate>
-        @if (FileUploadIsEmpty())
-        {
-            <div class="browse-file">
-                <div class="browse-file-header">
-                    <i class="bit-icon bit-icon--CloudUpload" />
-                    <div>
-                        Drag and drop or
-                    </div>
-                    <div>
-                        <strong>
-                            Browse file
-                        </strong>
-                    </div>
-                </div>
-
-                <div class="browse-file-footer">
-                    <div>
-                        Max file size: 2 MB
-                    </div>
-                    <div>
-                        Supported file types: jpg, jpeg, png, bpm
-                    </div>
-                </div>
-            </div>
-        }
-    </LabelTemplate>
-    <FileViewTemplate Context="file">
-        @if (file.Status != BitFileUploadStatus.Removed)
-        {
-            <div class="file-list">
-                <div class="file-info">
-                    <div class="file-info-ico">
-                        <i class="bit-icon bit-icon--FileImage" />
-                    </div>
-                    <div class="file-info-data">
-                        <div class="file-info-title">
-                            <div class="file-info-name">@file.Name</div>
-                            <div class="file-info-btns">
-                                <label for="@bitFileUpload.InputId"><i class="bit-icon bit-icon--CloudUpload upload-ico" /></label>
-                                <i class="bit-icon bit-icon--ChromeClose remove-ico" @onclick="HandleRemoveOnClick" />
-                            </div>
-                        </div>
-
-                        @if (file.Status is BitFileUploadStatus.InProgress or BitFileUploadStatus.Pending)
-                        {
-                            var fileUploadPercent = GetFileUploadPercent(file);
-                            <div class="file-info-subtitle">@GetFileUploadSize(file) - @fileUploadPercent%</div>
-                            <div class="file-info-progressbar-container">
-                                <div class="file-info-progressbar" role="progressbar" style="width:@fileUploadPercent%;" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@fileUploadPercent"></div>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="@(file.Status == BitFileUploadStatus.Completed ? "file-info-s-msg" : "file-info-e-msg")">@GetUploadMessageStr(file)</div>
-                        }
-                    </div>
-                </div>
-
-                <div class="file-list-footer">
-                    <div>
-                        Max file size: 2 MB
-                    </div>
-                    <div>
-                        Supported file types: jpg, jpeg, png, bpm
-                    </div>
-                </div>
-            </div>
-        }
-    </FileViewTemplate>
-</BitFileUpload>
-
-<br />
-
-<BitButton OnClick="HandleUploadOnClick">Upload</BitButton>
+<MudStack Style="width: 100%">
+    <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                   @ref="@_fileUpload"
+                   OnFilesChanged="OnInputFileChanged"
+                   AppendMultipleFiles
+                   Hidden="@false"
+                   InputClass="absolute mud-width-full mud-height-full overflow-hidden z-10"
+                   InputStyle="opacity:0"
+                   tabindex="-1"
+                   @ondrop="@ClearDragClass"
+                   @ondragenter="@SetDragClass"
+                   @ondragleave="@ClearDragClass"
+                   @ondragend="@ClearDragClass">
+        <ActivatorContent>
+            <MudPaper Height="300px"
+                      Outlined="true"
+                      Class="@_dragClass">
+                <MudText Typo="Typo.h6">
+                    Drag and drop files here or click
+                </MudText>
+                @foreach (var file in _fileNames)
+                {
+                    <MudChip T="string"
+                             Color="Color.Dark"
+                             Text="@file"
+                             tabindex="-1" />
+                }
+            </MudPaper>
+        </ActivatorContent>
+    </MudFileUpload>
+    <MudToolBar Gutters="@false"
+                Class="relative d-flex justify-end gap-4">
+        <MudButton Color="Color.Primary"
+                   OnClick="@OpenFilePickerAsync"
+                   Variant="Variant.Filled">
+            Open file picker
+        </MudButton>
+        <MudButton Color="Color.Primary"
+                   Disabled="@(!_fileNames.Any())"
+                   OnClick="@Upload"
+                   Variant="Variant.Filled">
+            Upload
+        </MudButton>
+        <MudButton Color="Color.Error"
+                   Disabled="@(!_fileNames.Any())"
+                   OnClick="@ClearAsync"
+                   Variant="Variant.Filled">
+            Clear
+        </MudButton>
+    </MudToolBar>
+</MudStack>
 
 @code {
-[Inject] public IJSRuntime JSRuntime { get; set; } = default!;
-	private string NonChunkedUploadUrl => "FileUpload/UploadNonChunkedFile";
-	private string RemoveUrl => $"FileUpload/RemoveFile";
-	
-	private BitFileUpload bitFileUpload;
-	private bool FileUploadIsEmpty() => !bitFileUpload.Files?.Any(f => f.Status != BitFileUploadStatus.Removed) ?? true;
-	private async Task HandleUploadOnClick()
-	{
-	    if (bitFileUpload.Files is null) return;
-	
-	    await bitFileUpload.Upload();
-	}
-	private async Task HandleRemoveOnClick()
-	{
-	    if (bitFileUpload.Files is null) return;
-	
-	    await bitFileUpload.RemoveFile();
-	}
-	private static int GetFileUploadPercent(BitFileInfo file)
-	{
-	    int uploadedPercent;
-	    if (file.TotalUploadedSize >= file.Size)
-	    {
-	        uploadedPercent = 100;
-	    }
-	    else
-	    {
-	        uploadedPercent = (int)((file.TotalUploadedSize + file.LastChunkUploadedSize) / (float)file.Size * 100);
-	    }
-	
-	    return uploadedPercent;
-	}
-	private static string GetFileUploadSize(BitFileInfo file)
-	{
-	    long totalSize = file.Size / 1024;
-	    long uploadSize;
-	    if (file.TotalUploadedSize >= file.Size)
-	    {
-	        uploadSize = totalSize;
-	    }
-	    else
-	    {
-	        uploadSize = (file.TotalUploadedSize + file.LastChunkUploadedSize) / 1024;
-	    }
-	
-	    return $"{uploadSize}KB / {totalSize}KB";
-	}
-	private string GetUploadMessageStr(BitFileInfo file)
-	    => file.Status switch
-	    {
-	        BitFileUploadStatus.Completed => bitFileUpload.SuccessfulUploadMessage,
-	        BitFileUploadStatus.Failed => bitFileUpload.FailedUploadMessage,
-	        BitFileUploadStatus.NotAllowed => IsFileTypeNotAllowed(file) ? bitFileUpload.NotAllowedExtensionErrorMessage : bitFileUpload.MaxSizeErrorMessage,
-	        _ => string.Empty,
-	    };
-	private bool IsFileTypeNotAllowed(BitFileInfo file)
-	{
-	    if (bitFileUpload.Accept is not null) return false;
-	
-	    var fileSections = file.Name.Split('.');
-	    var extension = $".{fileSections?.Last()}";
-	    return bitFileUpload.AllowedExtensions.Count > 0 && bitFileUpload.AllowedExtensions.All(ext => ext != "*") && bitFileUpload.AllowedExtensions.All(ext => ext != extension);
-	}
+#nullable enable
+    private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
+    private string _dragClass = DefaultDragClass;
+    private readonly List<string> _fileNames = new();
+    private MudFileUpload<IReadOnlyList<IBrowserFile>>? _fileUpload;
+
+    private async Task ClearAsync()
+    {
+        await (_fileUpload?.ClearAsync() ?? Task.CompletedTask);
+        _fileNames.Clear();
+        ClearDragClass();
+    }
+
+    private Task OpenFilePickerAsync()
+        => _fileUpload?.OpenFilePickerAsync() ?? Task.CompletedTask;
+
+    private void OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        ClearDragClass();
+        var files = e.GetMultipleFiles();
+        foreach (var file in files)
+        {
+            _fileNames.Add(file.Name);
+        }
+    }
+
+    private void Upload()
+    {
+        // Upload the files here
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        Snackbar.Add("TODO: Upload your files!");
+    }
+
+    private void SetDragClass()
+        => _dragClass = $"{DefaultDragClass} mud-border-primary";
+
+    private void ClearDragClass()
+        => _dragClass = DefaultDragClass;
 }
