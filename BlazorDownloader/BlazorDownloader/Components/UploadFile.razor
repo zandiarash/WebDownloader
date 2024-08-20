@@ -79,11 +79,38 @@
         }
     }
 
-    private void Upload()
+    private async void Upload()
     {
-        // Upload the files here
+        // What should I add here ?
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
         Snackbar.Add("TODO: Upload your files!");
+
+        if (_fileUpload?.Files?.Count > 0)
+        {
+            using var content = new MultipartFormDataContent();
+            foreach (var file in _fileUpload.Files)
+            {
+                var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)); // Max file size 10 MB
+                content.Add(fileContent, "files", file.Name);
+            }
+
+            var client = new HttpClient();
+            var response = await client.PostAsync("https://yourserver/api/upload", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Files uploaded successfully!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Failed to upload files.", Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("No files selected.", Severity.Warning);
+        }
+
     }
 
     private void SetDragClass()

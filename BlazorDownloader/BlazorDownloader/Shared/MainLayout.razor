@@ -3,22 +3,23 @@
 @using Blazored.Toast.Services
 @using Blazored.Toast.Configuration
 
-<MudThemeProvider/>
-<MudDialogProvider/>
-<MudSnackbarProvider/>
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
 <PageTitle>BlazorDownloader</PageTitle>
 
-<BlazoredToasts Position="ToastPosition.TopRight"
-                Timeout="10"
-                IconType="IconType.FontAwesome"
-                ErrorIcon="error_outline"
-                InfoIcon="school"
-                SuccessIcon="done_outline"
-                WarningIcon="warning"
-                ShowProgressBar="@true"
-                ShowCloseButton="@true"
-                MaxToastCount="3">
+<style>
+    .blazored-toast-container {
+        z-index: 9999 !important;
+    }
+    .mud-main-content {
+    padding-bottom: 44px !important;
+}
+</style>
+<BlazoredToasts Position="ToastPosition.TopRight" Timeout="10" IconType="IconType.FontAwesome" ErrorIcon="error_outline"
+    InfoIcon="school" SuccessIcon="done_outline" WarningIcon="warning" ShowProgressBar="@true" ShowCloseButton="@true"
+    MaxToastCount="3">
     <CloseButtonContent>
         <div>
             <span class="myCloseButtonStyleClass">&times;</span>
@@ -28,10 +29,13 @@
 
 <MudLayout>
     <MudAppBar Elevation="0">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+            OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
-       @*  <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Href="https://mudblazor.com/" Target="_blank" />
-        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" /> *@
+        @* <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Href="https://mudblazor.com/"
+        Target="_blank" />
+        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit"
+        Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" /> *@
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
         <MudDrawerHeader>
