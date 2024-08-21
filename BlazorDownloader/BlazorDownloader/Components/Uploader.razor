@@ -4,7 +4,8 @@
         border: 1px solid #D2D2D7;
         border-radius: 2px;
         padding: 24px;
-    @*width:420px;*@height: 200px;
+        @*width:420px;*@
+        height: 200px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -44,7 +45,7 @@
         border: 1px solid #D2D2D7;
         border-radius: 2px;
         padding: 24px;
-        width: 420px;
+        /* width: 420px; */
         height: 200px;
         display: flex;
         flex-direction: column;
@@ -218,8 +219,8 @@
 </center>
 @code {
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
-    private string NonChunkedUploadUrl => "FileUpload/UploadNonChunkedFile";
-    private string RemoveUrl => $"FileUpload/RemoveFile";
+    private string NonChunkedUploadUrl => "Downloadables";
+    private string RemoveUrl => $"Downloadables";
 
     private BitFileUpload bitFileUpload;
     private bool FileUploadIsEmpty() => !bitFileUpload.Files?.Any(f => f.Status != BitFileUploadStatus.Removed) ?? true;
@@ -269,8 +270,7 @@
     {
         BitFileUploadStatus.Completed => bitFileUpload.SuccessfulUploadMessage,
         BitFileUploadStatus.Failed => bitFileUpload.FailedUploadMessage,
-        BitFileUploadStatus.NotAllowed => IsFileTypeNotAllowed(file) ? bitFileUpload.NotAllowedExtensionErrorMessage :
-    bitFileUpload.MaxSizeErrorMessage,
+        BitFileUploadStatus.NotAllowed => IsFileTypeNotAllowed(file) ? bitFileUpload.NotAllowedExtensionErrorMessage : bitFileUpload.MaxSizeErrorMessage,
         _ => string.Empty,
     };
     private bool IsFileTypeNotAllowed(BitFileInfo file)

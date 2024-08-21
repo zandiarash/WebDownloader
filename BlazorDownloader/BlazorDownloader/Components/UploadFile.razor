@@ -53,7 +53,7 @@
 </MudStack>
 
 @code {
-#nullable enable
+    #nullable enable
     private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
     private string _dragClass = DefaultDragClass;
     private readonly List<string> _fileNames = new();
@@ -81,6 +81,15 @@
 
     private async void Upload()
     {
+
+        foreach (var file in _fileNames)
+        {
+            var saveFolder = Path.Combine(@"C:\Users\Zandi\Desktop");
+            var filePath = Path.Combine(saveFolder, file);
+            Directory.CreateDirectory(saveFolder);
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            var aa = stream;
+        }
         // What should I add here ?
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
         Snackbar.Add("TODO: Upload your files!");

@@ -14,12 +14,15 @@
         z-index: 9999 !important;
     }
     .mud-main-content {
-    padding-bottom: 44px !important;
-}
+        padding-bottom: 44px !important;
+    }
+    .bit-upl, {
+        max-width: 100% !important;
+    }
 </style>
 <BlazoredToasts Position="ToastPosition.TopRight" Timeout="10" IconType="IconType.FontAwesome" ErrorIcon="error_outline"
-    InfoIcon="school" SuccessIcon="done_outline" WarningIcon="warning" ShowProgressBar="@true" ShowCloseButton="@true"
-    MaxToastCount="3">
+                InfoIcon="school" SuccessIcon="done_outline" WarningIcon="warning" ShowProgressBar="@true" ShowCloseButton="@true"
+                MaxToastCount="3">
     <CloseButtonContent>
         <div>
             <span class="myCloseButtonStyleClass">&times;</span>
@@ -30,7 +33,7 @@
 <MudLayout>
     <MudAppBar Elevation="0">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
-            OnClick="@((e) => DrawerToggle())" />
+                       OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
         @* <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Href="https://mudblazor.com/"
         Target="_blank" />
