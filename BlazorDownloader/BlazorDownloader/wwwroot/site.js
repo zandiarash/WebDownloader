@@ -20,3 +20,7 @@ window.clipboardCopy = {
             });
     }
 };
+
+function scrollToDownloads(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+}

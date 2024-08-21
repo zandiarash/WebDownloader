@@ -22,7 +22,7 @@ public class Download
 
 public interface IDownloadService
 {
-    public Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName);
+    public Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName,Func<Task> action);
     public bool PromptForDownloadAndDownloadAtLast(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName);
 }
 public class DownloadService : IDownloadService
@@ -40,12 +40,13 @@ public class DownloadService : IDownloadService
         }
         return true;
     }
-    public async Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName)
+    public async Task<bool> DownloadFromUrlAsync(Func<Task<bool>> stateChange, string downloadRootPath, string url, string fileName,Func<Task> action)
     {
         if (fileNameUrlDownloading.Any(x => x.url == url)) { return false; }
         var thisDownload = new Download(url, fileName, new CancellationTokenSource());
 
         fileNameUrlDownloading.Add(thisDownload);
+        await action();
 
         string DestinationFilePath = Path.Combine(downloadRootPath, fileName);
 

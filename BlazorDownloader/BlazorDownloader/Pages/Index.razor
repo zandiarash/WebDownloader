@@ -31,7 +31,7 @@
         Upload To Server
     </div>
     <div class="card-body">
-        <Uploader/>
+        <Uploader />
     </div>
 </div>
 <br />
@@ -41,106 +41,108 @@
         Upload To Server
     </div>
     <div class="card-body">
-        <UploadFile/>
+        <UploadFile />
     </div>
 </div>
 
-
-@{
-    if (DownloadService.fileNameUrlDownloading.Count != 0)
-    {
-        <br />
-        <div class="card">
-            <div class="card-header">
-                Downloading
-            </div>
-            <div class="card-body">
-                <div class=" table-responsive">
-                    <table class="table table-striped ">
-                        <thead>
-                            <tr>
-                                <th scope="col">Copy download Link</th>
-                                <th class="text-center" scope="col">File Name</th>
-                                <th class="text-center" scope="col">Total Size</th>
-                                <th class="text-center" scope="col">Downloaded Size</th>
-                                <th class="text-center" scope="col">Progress</th>
-                                <th scope="col">Cancel</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                foreach (var item in DownloadService.fileNameUrlDownloading)
-                                {
-                                    <tr>
-                                        <td colspan="6">
-                                            <MudProgressLinear Color="Color.Primary" Value="@(item.processPercent ?? 0)" Class="my-7" />
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <MudLink download @onclick="() => copyLinkToClipboard(item.url)">
-                                                <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Reddit" Color="Color.Default" Size="Size.Large" />
-                                            </MudLink>
-                                        </td>
-                                        <td class="w-50 text-break text-center">@item.fileName</td>
-                                        <td class="text-center">@DownloadService.byteToRealSize(item.downloadFileSize??0)</td>
-                                        <td class="text-center">@DownloadService.byteToRealSize(item.downloadedSize)</td>
-                                        <td class="text-center">@(item.processPercent == null ? "" : $"{item.processPercent:0.##}%") </td>
-                                        <td>
-                                            <MudLink download @onclick="() =>  cancelItem(item.url)">
-                                                <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
-                                            </MudLink>
-                                        </td>
-                                    </tr>
-                                }
+<br />
+<div class="card">
+    <div class="card-header">
+        Downloading
+    </div>
+    <div class="card-body">
+        @if (DownloadService.fileNameUrlDownloading.Count != 0)
+        {
+            <div class=" table-responsive">
+                <table class="table table-striped ">
+                    <thead>
+                        <tr>
+                            <th scope="col">Copy download Link</th>
+                            <th class="text-center" scope="col">File Name</th>
+                            <th class="text-center" scope="col">Total Size</th>
+                            <th class="text-center" scope="col">Downloaded Size</th>
+                            <th class="text-center" scope="col">Progress</th>
+                            <th scope="col">Cancel</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (var item in DownloadService.fileNameUrlDownloading)
+                            {
+                                <tr>
+                                    <td colspan="6">
+                                        <MudProgressLinear Color="Color.Primary" Value="@(item.processPercent ?? 0)" Class="my-7" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <MudLink download @onclick="() => copyLinkToClipboard(item.url)">
+                                            <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Reddit" Color="Color.Default" Size="Size.Large" />
+                                        </MudLink>
+                                    </td>
+                                    <td class="w-50 text-break text-center">@item.fileName</td>
+                                    <td class="text-center">@DownloadService.byteToRealSize(item.downloadFileSize ?? 0)</td>
+                                    <td class="text-center">@DownloadService.byteToRealSize(item.downloadedSize)</td>
+                                    <td class="text-center">@(item.processPercent == null ? "" : $"{item.processPercent:0.##}%") </td>
+                                    <td>
+                                        <MudLink download @onclick="() =>  cancelItem(item.url)">
+                                            <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
+                                        </MudLink>
+                                    </td>
+                                </tr>
                             }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    }
-}
-@{
-    if (DownloadService.fileNameUrlDownnloaded.Count != 0)
-    {
-        <br />
-        <div class="card">
-            <div class="card-header">
-                Downloaded
-            </div>
-            <div class="card-body">
-                <ul class="list-group" id="item-list">
-                    <!-- Example item with remove button -->
-                    @{
-                        foreach (var item in DownloadService.fileNameUrlDownnloaded)
-                        {
-                            var link = $@"{_baseURL}/{Program.downloadFolder}/{item}";
-                            <li style="background:cornsilk" class="list-group-item d-flex justify-content-between align-items-center text-break">
-                                <a download href="@link">@item</a>
-                                <div>
-                                    <MudLink download href="@link">
-                                        <MudIcon Icon="@Icons.Material.Filled.Download" Title="Reddit" Color="Color.Success" Size="Size.Large" />
-                                    </MudLink>
-                                    <MudLink download @onclick="() => deleteItem(item)">
-                                        <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
-                                    </MudLink>
-                                </div>
-                            </li>
                         }
-                    }
-                </ul>
+                    </tbody>
+                </table>
             </div>
-        </div>
-    }
-}
+        }
+        else
+        {
+            <center>Nothing is Here yet.</center>
+        }
+    </div>
+</div>
+
+<br />
+<div class="card">
+    <div class="card-header">
+        Downloaded
+    </div>
+    <div class="card-body" id="DownloadCard">
+        @if (DownloadService.fileNameUrlDownnloaded.Count != 0)
+        {
+        <ul class="list-group" id="item-list">
+            @{
+                foreach (var item in DownloadService.fileNameUrlDownnloaded)
+                {
+                    var link = $@"{_baseURL}/{Program.downloadFolder}/{item}";
+                    <li style="background:cornsilk" class="list-group-item d-flex justify-content-between align-items-center text-break">
+                        <a download href="@link">@item</a>
+                        <div>
+                            <MudLink download href="@link">
+                                <MudIcon Icon="@Icons.Material.Filled.Download" Title="Reddit" Color="Color.Success" Size="Size.Large" />
+                            </MudLink>
+                            <MudLink download @onclick="() => deleteItem(item)">
+                                <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
+                            </MudLink>
+                        </div>
+                    </li>
+                }
+            }
+        </ul>
+        }
+        else{
+            <center>Nothing is Here yet.</center>
+        }
+    </div>
+</div>
 
 @code {
     string _baseURL = string.Empty;
     private string currentLink { get; set; } = "";
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _GlobalState.OnDownloadReceived =(async ()=>{ await InvokeAsync(this.StateHasChanged);});
+        _GlobalState.OnDownloadReceived = (async () => { await InvokeAsync(this.StateHasChanged); });
 
         DownloadService.fileNameUrlDownnloaded.Clear();
         // Dont Show file as downloaded while downloading
@@ -178,10 +180,13 @@
             return;
         }
 
-        var res = await downloadService.DownloadFromUrlAsync(UpdateStateAndNotifyOthers, Program.downloadRootPath, currentLink, fileName);
+        var res = await downloadService.DownloadFromUrlAsync(UpdateStateAndNotifyOthers, Program.downloadRootPath, currentLink, fileName, ScrollToDownloads);
 
         if (!res)
+        {
             ToastService.ShowError($"Problem With Download {fileName}");
+            return;
+        }
     }
     protected async Task copyLinkToClipboard(string text)
     {
@@ -195,13 +200,18 @@
     {
         await DownloadService.removeDownloadedItem(UpdateStateAndNotifyOthers, fileName, Program.downloadRootPath);
     }
+
+    protected async Task ScrollToDownloads()
+    {
+        await JS.InvokeVoidAsync("scrollToDownloads", "DownloadCard");
+    }
+
     private async Task<bool> UpdateStateAndNotifyOthers()
     {
         this.StateHasChanged();
         await _GlobalState.OnDownloadReceived.Invoke();
         return true;
     }
-
 }
 
 
