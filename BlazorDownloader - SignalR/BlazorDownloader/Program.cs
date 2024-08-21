@@ -1,5 +1,10 @@
+using BlazorDownloader.Hubs;
 using Blazored.Toast;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Identity;
 using System.Net;
 using MudBlazor.Services;
 using BlazorDownloader.Models;
@@ -28,7 +33,8 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSingleton<IDownloadService, DownloadService>();
 builder.Services.AddSingleton<HttpClient>();
- builder.Services.AddSingleton<GlobalState>();
+builder.Services.AddSignalR();
+
 
 var app = builder.Build();
 
@@ -60,6 +66,7 @@ app.UseDirectoryBrowser(new DirectoryBrowserOptions
 app.UseRouting();
 
 app.MapBlazorHub();
+app.MapHub<GlobalHub>("/GlobalHub");
 app.MapFallbackToPage("/_Host");
 
 app.Run();
@@ -67,7 +74,7 @@ app.Run();
 
 public partial class Program
 {
-    public static UserModel thisUser = new();
+    public static UserModel thisUser = new UserModel();
     public static IConfigurationRoot? configurations;
     public static string downloadFolder = "Downloadables";
     public static string downloadRootPath = string.Empty;

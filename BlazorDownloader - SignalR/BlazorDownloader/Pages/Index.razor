@@ -1,12 +1,15 @@
 ﻿@page "/"
 @using System.Text;
+@using BlazorDownloader.Hubs;
+@using Microsoft.AspNetCore.SignalR;
+@using Microsoft.AspNetCore.SignalR.Client;
 @using BlazorDownloader.Components;
-@inject IJSRuntime JS
 @inject IDownloadService downloadService
 @inject IHttpContextAccessor httpContextAccessor
 @inject Blazored.Toast.Services.IToastService ToastService
+@inject IJSRuntime JS
+@inject IHubContext<GlobalHub> _hubContext
 @inject NavigationManager NavigationManager
-@inject GlobalState _GlobalState
 
 <PageTitle>Download Platform</PageTitle>
 
@@ -136,11 +139,15 @@
 }
 
 @code {
+    private HubConnection? hubConnection;
     string _baseURL = string.Empty;
     private string currentLink { get; set; } = "";
     protected override async Task OnInitializedAsync()
     {
-        _GlobalState.OnDownloadReceived =(async ()=>{ await InvokeAsync(this.StateHasChanged);});
+#if !DEBUG
+        if (!Program.thisUser.canUse)
+            NavigationManager.NavigateTo("Login");
+#endif
 
         DownloadService.fileNameUrlDownnloaded.Clear();
         // Dont Show file as downloaded while downloading
@@ -149,6 +156,17 @@
             DownloadService.fileNameUrlDownnloaded.Add(item.Name);
 
         _baseURL = $"{httpContextAccessor?.HttpContext?.Request.Scheme}://{httpContextAccessor?.HttpContext?.Request.Host}";
+
+        hubConnection = new HubConnectionBuilder()
+             .WithUrl(NavigationManager.ToAbsoluteUri("/GlobalHub"))
+             .Build();
+
+        hubConnection.On<string>("ReceiveMessage", (message) =>
+        {
+            InvokeAsync(StateHasChanged);
+        });
+        await hubConnection.StartAsync();
+
     }
     private async void DownloadLink()
     {
@@ -170,6 +188,7 @@
         }
 
         var fileName = uri.Segments.Last();
+
 
         var prompted = downloadService.PromptForDownloadAndDownloadAtLast(UpdateStateAndNotifyOthers, Program.downloadRootPath, currentLink, fileName);
         if (!prompted)
@@ -198,7 +217,8 @@
     private async Task<bool> UpdateStateAndNotifyOthers()
     {
         this.StateHasChanged();
-        await _GlobalState.OnDownloadReceived.Invoke();
+        if (hubConnection is not null)
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", "State has changed!");
         return true;
     }
 
