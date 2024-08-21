@@ -26,6 +26,22 @@
 </div>
 <br />
 
+
+<div class="card">
+    <div class="card-header">
+        Upload To Server
+    </div>
+    <div class="card-body">
+        <input type="file"
+               class="uploaderInputs"
+               id="uploaderInput"
+               name="filepond"
+               multiple
+               data-max-files="3" />
+    </div>
+</div>
+<br />
+
 @* <div class="card">
     <div class="card-header">
         Upload To Server
@@ -141,7 +157,12 @@
 @code {
     string _baseURL = string.Empty;
     private string currentLink { get; set; } = "";
-    protected override void OnInitialized()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await JS.InvokeVoidAsync("FileUploaderInit", "uploaderInputs");
+    }
+    protected override async Task OnInitializedAsync()
     {
         _GlobalState.OnDownloadReceived = (async () => { await InvokeAsync(this.StateHasChanged); });
 

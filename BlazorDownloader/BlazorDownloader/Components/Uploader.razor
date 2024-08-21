@@ -219,7 +219,7 @@
 </center>
 @code {
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
-    private string NonChunkedUploadUrl => "Downloadables";
+    private string NonChunkedUploadUrl => "uploader/upload";
     private string RemoveUrl => $"Downloadables";
 
     private BitFileUpload bitFileUpload;

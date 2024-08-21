@@ -1,0 +1,16 @@
+{
+  "name": "blazordownloader",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "filepond": "^4.31.2",
+    "jquery": "^3.7.1",
+    "jquery-filepond": "^1.0.0"
+  }
+}
