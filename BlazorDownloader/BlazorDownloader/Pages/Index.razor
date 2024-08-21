@@ -108,30 +108,31 @@
     <div class="card-header">
         Downloaded
     </div>
-    <div class="card-body" id="DownloadCard">
+    <div class="card-body" id="DownloadedCard">
         @if (DownloadService.fileNameUrlDownnloaded.Count != 0)
         {
-        <ul class="list-group" id="item-list">
-            @{
-                foreach (var item in DownloadService.fileNameUrlDownnloaded)
-                {
-                    var link = $@"{_baseURL}/{Program.downloadFolder}/{item}";
-                    <li style="background:cornsilk" class="list-group-item d-flex justify-content-between align-items-center text-break">
-                        <a download href="@link">@item</a>
-                        <div>
-                            <MudLink download href="@link">
-                                <MudIcon Icon="@Icons.Material.Filled.Download" Title="Reddit" Color="Color.Success" Size="Size.Large" />
-                            </MudLink>
-                            <MudLink download @onclick="() => deleteItem(item)">
-                                <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
-                            </MudLink>
-                        </div>
-                    </li>
+            <ul class="list-group" id="item-list">
+                @{
+                    foreach (var item in DownloadService.fileNameUrlDownnloaded)
+                    {
+                        var link = $@"{_baseURL}/{Program.downloadFolder}/{item}";
+                        <li style="background:cornsilk" class="list-group-item d-flex justify-content-between align-items-center text-break">
+                            <a download href="@link">@item</a>
+                            <div>
+                                <MudLink download href="@link">
+                                    <MudIcon Icon="@Icons.Material.Filled.Download" Title="Reddit" Color="Color.Success" Size="Size.Large" />
+                                </MudLink>
+                                <MudLink download @onclick="() => deleteItem(item)">
+                                    <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
+                                </MudLink>
+                            </div>
+                        </li>
+                    }
                 }
-            }
-        </ul>
+            </ul>
         }
-        else{
+        else
+        {
             <center>Nothing is Here yet.</center>
         }
     </div>
@@ -180,7 +181,7 @@
             return;
         }
 
-        var res = await downloadService.DownloadFromUrlAsync(UpdateStateAndNotifyOthers, Program.downloadRootPath, currentLink, fileName, ScrollToDownloads);
+        var res = await downloadService.DownloadFromUrlAsync(UpdateStateAndNotifyOthers, Program.downloadRootPath, currentLink, fileName, async () => { await JS.InvokeVoidAsync("scrollToDownloads", "DownloadedCard"); });
 
         if (!res)
         {
@@ -199,11 +200,6 @@
     protected async Task deleteItem(string fileName)
     {
         await DownloadService.removeDownloadedItem(UpdateStateAndNotifyOthers, fileName, Program.downloadRootPath);
-    }
-
-    protected async Task ScrollToDownloads()
-    {
-        await JS.InvokeVoidAsync("scrollToDownloads", "DownloadCard");
     }
 
     private async Task<bool> UpdateStateAndNotifyOthers()
