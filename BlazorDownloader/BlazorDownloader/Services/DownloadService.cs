@@ -1,9 +1,3 @@
-
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading;
-
-
 public class Download
 {
     public Download(string _url, string _fileName, CancellationTokenSource _cancellationTokenSource)
@@ -103,7 +97,6 @@ public class DownloadService : IDownloadService
         await stateChange();
         return true;
     }
-
     public static async Task removeDownloadingItem(Func<Task<bool>> stateChange, string url, string downloadRootPath, bool removeFileAlso = false)
     {
         var item = fileNameUrlDownloading.FirstOrDefault(x => x.url == url);
@@ -142,7 +135,6 @@ public class DownloadService : IDownloadService
         await stateChange();
         return true;
     }
-
     public static string byteToRealSize(long bytes)
     {
         if (bytes == 0L) return "";

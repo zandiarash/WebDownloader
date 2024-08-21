@@ -1,10 +1,9 @@
 using Blazored.Toast;
 using Microsoft.Extensions.FileProviders;
-using System.Net;
 using MudBlazor.Services;
 using BlazorDownloader.Models;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Http.HttpResults;
+
 
 configurations = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
@@ -33,6 +32,7 @@ builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<GlobalState>();
 
 var app = builder.Build();
+ServiceProviderHelper.Configure(app.Services);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -99,6 +99,14 @@ app.MapPost("/uploader", async (HttpRequest request) =>
 
     return Results.Ok(new { fileName = file.FileName, url = $"{request.GetDisplayUrl()}/{file.FileName}" });
 });
+
+//app.MapPost("/uploader/inform", async (HttpContext context) =>
+//{
+//    return;
+//    using var scope = builder.Services.BuildServiceProvider().CreateScope();
+//    var stateService = context.RequestServices.GetRequiredService<GlobalState>();
+//    await stateService.Act();
+//});
 
 app.Run();
 

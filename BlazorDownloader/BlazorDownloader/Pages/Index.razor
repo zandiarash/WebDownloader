@@ -93,7 +93,7 @@
                                 <tr>
                                     <td>
                                         <MudLink download @onclick="() => copyLinkToClipboard(item.url)">
-                                            <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Reddit" Color="Color.Default" Size="Size.Large" />
+                                            <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Download" Color="Color.Default" Size="Size.Large" />
                                         </MudLink>
                                     </td>
                                     <td class="w-50 text-break text-center">@item.fileName</td>
@@ -102,7 +102,7 @@
                                     <td class="text-center">@(item.processPercent == null ? "" : $"{item.processPercent:0.##}%") </td>
                                     <td>
                                         <MudLink download @onclick="() =>  cancelItem(item.url)">
-                                            <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
+                                            <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Download" Color="Color.Error" Size="Size.Large" />
                                         </MudLink>
                                     </td>
                                 </tr>
@@ -136,10 +136,10 @@
                             <a download href="@link">@item</a>
                             <div>
                                 <MudLink download href="@link">
-                                    <MudIcon Icon="@Icons.Material.Filled.Download" Title="Reddit" Color="Color.Success" Size="Size.Large" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Download" Title="Download" Color="Color.Success" Size="Size.Large" />
                                 </MudLink>
                                 <MudLink download @onclick="() => deleteItem(item)">
-                                    <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Reddit" Color="Color.Error" Size="Size.Large" />
+                                    <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Title="Download" Color="Color.Error" Size="Size.Large" />
                                 </MudLink>
                             </div>
                         </li>
@@ -164,7 +164,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        _GlobalState.OnDownloadReceived = (async () => { await InvokeAsync(this.StateHasChanged); });
+        _GlobalState.OnDownloadReceived.Add(async () => { await InvokeAsync(this.StateHasChanged); });
 
         DownloadService.fileNameUrlDownnloaded.Clear();
         // Dont Show file as downloaded while downloading
@@ -230,8 +230,16 @@
     private async Task<bool> UpdateStateAndNotifyOthers()
     {
         this.StateHasChanged();
-        await _GlobalState.OnDownloadReceived.Invoke();
+        await _GlobalState.Act();
         return true;
+    }
+
+    [JSInvokable]
+    public static async Task AddToDowloadsList(string fileName)
+    {
+        DownloadService.fileNameUrlDownnloaded.Add(fileName);
+        var stateService = ServiceProviderHelper.ServiceProvider.GetRequiredService<GlobalState>();
+        await stateService.Act();
     }
 }
 

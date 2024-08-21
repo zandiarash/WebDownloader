@@ -49,7 +49,7 @@ function FileUploaderInit(className) {
         }
     });
 
-    const pond = FilePond.create(document.querySelector(`.${className}`), { });
+    const pond = FilePond.create(document.querySelector(`.${className}`), {});
 
     // Event listener for file upload
     pond.on('processfile', (error, file) => {
@@ -58,5 +58,20 @@ function FileUploaderInit(className) {
             return;
         }
         console.log('File processed successfully', file);
+
+        //fetch('/uploader/inform', {
+        //    method: 'POST',
+        //    headers: { 'Content-Type': 'application/json', },
+        //    body: JSON.stringify({ content: file.file.name }),
+        //})
+        //.then(response => response.json())
+        //.then(data => console.log('Success:', data))
+        //.catch((error) => console.error('Error:', error));
+
+        DotNet.invokeMethodAsync('BlazorDownloader', 'AddToDowloadsList', file.file.name)
+            .then(data => {
+                console.log(data);
+            });
+
     });
 }
