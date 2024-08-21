@@ -153,7 +153,8 @@
 
         _baseURL = $"{httpContextAccessor?.HttpContext?.Request.Scheme}://{httpContextAccessor?.HttpContext?.Request.Host}";
     }
-    private async void DownloadLink()
+
+    private async Task DownloadLink()
     {
         if (string.IsNullOrEmpty(currentLink))
         {
@@ -189,15 +190,18 @@
             return;
         }
     }
-    protected async Task copyLinkToClipboard(string text)
+
+    private async Task copyLinkToClipboard(string text)
     {
         await JS.InvokeVoidAsync("clipboardCopy.copyText", text);
     }
-    protected async Task cancelItem(string key)
+
+    private async Task cancelItem(string key)
     {
         await DownloadService.removeDownloadingItem(UpdateStateAndNotifyOthers, key, Program.downloadRootPath, removeFileAlso: true);
     }
-    protected async Task deleteItem(string fileName)
+
+    private async Task deleteItem(string fileName)
     {
         await DownloadService.removeDownloadedItem(UpdateStateAndNotifyOthers, fileName, Program.downloadRootPath);
     }
