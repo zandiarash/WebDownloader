@@ -3,6 +3,7 @@ using Microsoft.Extensions.FileProviders;
 using MudBlazor.Services;
 using BlazorDownloader.Models;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Http.Features;
 
 
 configurations = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
@@ -77,6 +78,12 @@ app.MapDelete("/uploader", async (HttpRequest request) =>
 });
 app.MapPost("/uploader", async (HttpRequest request) =>
 {
+    var maxRequestBodySizeFeature = request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
+    if (maxRequestBodySizeFeature != null)
+    {
+        maxRequestBodySizeFeature.MaxRequestBodySize = null;
+    }
+
     if (!request.HasFormContentType)
     {
         return Results.BadRequest("Invalid form content");

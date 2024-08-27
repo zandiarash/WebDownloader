@@ -29,13 +29,25 @@
 
 <div class="card">
     <div class="card-header">
-        Upload To Server
+        @if (!UploaderInited)
+        {
+            <center>Uploader Initialing</center>
+        }
+        else
+        {
+            <span>Upload To Server</span>
+        }
     </div>
     <div class="card-body">
+        @if (!UploaderInited)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+        }
         <input type="file"
                class="uploaderInputs"
                id="uploaderInput"
                name="filepond"
+               style="display: @(UploaderInited ?"":"none")"
                multiple
                data-max-files="3" />
     </div>
@@ -155,12 +167,18 @@
 </div>
 
 @code {
+    bool UploaderInited = false;
+
     string _baseURL = string.Empty;
     private string currentLink { get; set; } = "";
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
+        {
             await JS.InvokeVoidAsync("FileUploaderInit", "uploaderInputs");
+            UploaderInited = true;
+            this.StateHasChanged();
+        }
     }
     protected override async Task OnInitializedAsync()
     {
