@@ -1,0 +1,133 @@
+﻿@page "/Login"
+@using System.Text;
+@using BlazorCaptcha
+@using BlazorDownloader.Models;
+@using Microsoft.Extensions.Caching.Memory;
+@inject IJSRuntime JS
+@inject Blazored.Toast.Services.IToastService ToastService
+@inject IMemoryCache _cache
+@inject IHttpContextAccessor httpContextAccessor
+@inject NavigationManager NavigationManager
+
+<link href="_content/BlazorCaptcha/captcha.css" rel="stylesheet" />
+
+<h3>Captcha Test</h3>
+<Captcha @bind-CaptchaWord="@Captcha" CharNumber="@CaptchaLetters" />
+<br />
+<MudTextField @bind-Value="enteredCaptcha"
+              For="@(() => enteredCaptcha)"
+              Label="Captcha" />
+<br />
+
+<MudButton Disabled="@(!enabledButton)" Variant="Variant.Filled" Color="Color.Primary" OnClick="CheckCaptcha">Test</MudButton>
+
+@code {
+    List<UserModel> cacheData = new List<UserModel>();
+
+    private byte wait = 5;
+    private string? myIp = null;
+
+    private bool enabledButton = true;
+    private string Captcha = "";
+    private int CaptchaLetters = 5;
+    private string enteredCaptcha = "";
+
+    protected override Task OnInitializedAsync()
+    {
+        myIp = httpContextAccessor?.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? null;
+#if DEBUG
+   myIp = "127.0.0.1";
+#endif
+
+        cacheData = _cache.Get<List<UserModel>>(Program.cacheNameUsers) ?? new List<UserModel>();
+        // Find user - If does not exists add a new
+        Program.thisUser = cacheData?.FirstOrDefault(x => x.ip == myIp) ?? null;
+
+        if (Program.thisUser == null)
+            Program.thisUser = new UserModel()
+                {
+                    ip = myIp,
+                    canUse = false,
+                    canGenerateCaptcha = true,
+                    wrongAttempts = 0,
+                    cannotUseUntil = null
+                };
+
+        if (!cacheData.Any(x => x.ip == Program.thisUser.ip))
+            cacheData.Add(Program.thisUser);
+
+        enabledButton = Program.thisUser.canGenerateCaptcha || (DateTime.Now >= Program.thisUser.cannotUseUntil);
+        if (!Program.thisUser.canGenerateCaptcha && enabledButton)
+            Program.thisUser.canGenerateCaptcha = true;
+
+        if (Program.thisUser.canGenerateCaptcha)
+            Captcha = BlazorCaptcha.Tools.GetCaptchaWord(CaptchaLetters);
+
+        _cache.Set<List<UserModel>>(Program.cacheNameUsers, cacheData, DateTime.Now.AddYears(1));
+        return base.OnInitializedAsync();
+    }
+
+    public async Task allowUser()
+    {
+        Program.thisUser.wrongAttempts = 0;
+        Program.thisUser.canGenerateCaptcha = true;
+        Program.thisUser.canUse = true;
+        Program.thisUser.cannotUseUntil = null;
+        var user = cacheData.FirstOrDefault(x => x.ip == Program.thisUser.ip);
+        if (user != null)
+            cacheData.Remove(user);
+        cacheData.Add(Program.thisUser);
+        _cache.Set<List<UserModel>>(Program.cacheNameUsers, cacheData, DateTime.Now.AddYears(1));
+        Captcha = BlazorCaptcha.Tools.GetCaptchaWord(CaptchaLetters);
+
+        await InvokeAsync(() =>
+        {
+            enabledButton = true;
+            Captcha = BlazorCaptcha.Tools.GetCaptchaWord(CaptchaLetters);
+            this.StateHasChanged();
+        });
+    }
+    public void disAllowUser()
+    {
+        Program.thisUser.canUse = false;
+        Program.thisUser.cannotUseUntil = DateTime.Now.AddMinutes(wait);
+        Program.thisUser.canGenerateCaptcha = false;
+        enabledButton = false;
+        cacheData.Remove(cacheData.First(x => x.ip == Program.thisUser.ip));
+        cacheData.Add(Program.thisUser);
+        _cache.Set<List<UserModel>>(Program.cacheNameUsers, cacheData, DateTime.Now.AddYears(1));
+    }
+
+    public async void CheckCaptcha()
+    {
+        if (!enabledButton)
+            return;
+
+        var texts = enteredCaptcha.Split("-");
+        if (texts.Count() == 2 && texts[0].Trim().ToLower() == Captcha.Trim().ToLower() && texts[1] == Program.Credentials)
+        {
+            await allowUser();
+            await JS.InvokeVoidAsync("console.log", "OK");
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            Captcha = BlazorCaptcha.Tools.GetCaptchaWord(CaptchaLetters);
+            Program.thisUser.wrongAttempts++;
+            if (Program.thisUser.wrongAttempts > 3)
+            {
+                await JS.InvokeVoidAsync("console.log", Program.thisUser.ip);
+                disAllowUser();
+
+                await JS.InvokeVoidAsync("console.log", "Wrong attempts exceeds");
+                ToastService.ShowWarning($"You entered wrong captcha more than 3 times, Wait for {wait} minutes and try again");
+
+                await new TaskFactory().StartNew(async () =>
+                {
+                    await Task.Delay(wait * 100 * 60);
+                    await allowUser();
+                });
+            }
+        }
+    }
+}
