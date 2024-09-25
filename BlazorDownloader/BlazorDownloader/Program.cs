@@ -102,31 +102,26 @@ app.MapPost("/uploader", async (HttpRequest request) =>
         return Results.BadRequest("Invalid form content");
     }
 
-    var form = await request.ReadFormAsync();
-    var file = form.Files[0];
-
-    if (file == null || file.Length == 0)
+    try
     {
-        return Results.BadRequest("File not found or empty");
+        var form = await request.ReadFormAsync();
+        var file = form.Files[0];
+
+        if (file == null || file.Length == 0)
+            return Results.BadRequest("File not found or empty");
+
+        var filePath = Path.Combine(downloadFolder, file.FileName);
+        using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+
+        return Results.Ok(new { fileName = file.FileName, url = $"{request.GetDisplayUrl()}/{file.FileName}" });
     }
-
-    // Save the file to a directory on the server
-    var filePath = Path.Combine(downloadFolder, file.FileName);
-
-    // Save the file
-    using var stream = new FileStream(filePath, FileMode.Create);
-    await file.CopyToAsync(stream);
-
-    return Results.Ok(new { fileName = file.FileName, url = $"{request.GetDisplayUrl()}/{file.FileName}" });
+    catch (Exception ee)
+    {
+        return Results.BadRequest(ee.Message);
+    }
 });
 
-//app.MapPost("/uploader/inform", async (HttpContext context) =>
-//{
-//    return;
-//    using var scope = builder.Services.BuildServiceProvider().CreateScope();
-//    var stateService = context.RequestServices.GetRequiredService<GlobalState>();
-//    await stateService.Act();
-//});
 
 app.Run();
 
@@ -146,6 +141,4 @@ public partial class Program
         get; set;
     }
     public static string cacheNameUsers = "users";
-
-    // public static string downloadRootPath = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Downloadables")).Root;
 }
