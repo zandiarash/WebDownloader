@@ -4,6 +4,7 @@ using MudBlazor.Services;
 using BlazorDownloader.Models;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
+using System.Net.Sockets;
 
 
 configurations = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
@@ -91,12 +92,6 @@ app.MapDelete("/uploader", async (HttpRequest request) =>
 });
 app.MapPost("/uploader", async (HttpRequest request) =>
 {
-    var maxRequestBodySizeFeature = request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
-    if (maxRequestBodySizeFeature != null)
-    {
-        maxRequestBodySizeFeature.MaxRequestBodySize = null;
-    }
-
     if (!request.HasFormContentType)
     {
         return Results.BadRequest("Invalid form content");
@@ -110,9 +105,12 @@ app.MapPost("/uploader", async (HttpRequest request) =>
         if (file == null || file.Length == 0)
             return Results.BadRequest("File not found or empty");
 
-        var filePath = Path.Combine(downloadFolder, file.FileName);
-        using var stream = new FileStream(filePath, FileMode.Create);
-        await file.CopyToAsync(stream);
+        var tcpClient = new TcpClient("localhost", 5000);
+        using var networkStream = tcpClient.GetStream();
+        using var writer = new StreamWriter(networkStream) { AutoFlush = true };
+
+        await writer.WriteLineAsync(file.FileName);
+        await file.CopyToAsync(networkStream);
 
         return Results.Ok(new { fileName = file.FileName, url = $"{request.GetDisplayUrl()}/{file.FileName}" });
     }
@@ -120,6 +118,35 @@ app.MapPost("/uploader", async (HttpRequest request) =>
     {
         return Results.BadRequest(ee.Message);
     }
+    // var maxRequestBodySizeFeature = request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
+    // if (maxRequestBodySizeFeature != null)
+    // {
+    //     maxRequestBodySizeFeature.MaxRequestBodySize = null;
+    // }
+
+    // if (!request.HasFormContentType)
+    // {
+    //     return Results.BadRequest("Invalid form content");
+    // }
+
+    // try
+    // {
+    //     var form = await request.ReadFormAsync();
+    //     var file = form.Files[0];
+
+    //     if (file == null || file.Length == 0)
+    //         return Results.BadRequest("File not found or empty");
+
+    //     var filePath = Path.Combine(downloadFolder, file.FileName);
+    //     using var stream = new FileStream(filePath, FileMode.Create);
+    //     await file.CopyToAsync(stream);
+
+    //     return Results.Ok(new { fileName = file.FileName, url = $"{request.GetDisplayUrl()}/{file.FileName}" });
+    // }
+    // catch (Exception ee)
+    // {
+    //     return Results.BadRequest(ee.Message);
+    // }
 });
 
 
