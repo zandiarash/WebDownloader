@@ -5,6 +5,7 @@ using BlazorDownloader.Models;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using System.Net.Sockets;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 
 configurations = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
@@ -33,17 +34,36 @@ builder.Services.AddSingleton<IDownloadService, DownloadService>();
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<GlobalState>();
 
-// Increase the multipart body length limit
-builder.Services.Configure<FormOptions>(options =>
+builder.Services.Configure<IISServerOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 536870912; // 512 MB
+    options.MaxRequestBodySize = int.MaxValue; // or specify a larger size in bytes
 });
 
-// Adjust the Kestrel server limits
-builder.WebHost.ConfigureKestrel(serverOptions =>
+builder.Services.Configure<KestrelServerOptions>(options =>
 {
-    serverOptions.Limits.MaxRequestBodySize = 536870912; // 512 MB
+    options.Limits.MaxRequestBodySize = int.MaxValue; // or specify a larger size
 });
+
+builder.WebHost.ConfigureKestrel((context, options) =>
+{
+    options.Limits.MaxRequestBodySize = long.MaxValue;
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = long.MaxValue; // Or specify a higher limit
+});
+// // Increase the multipart body length limit
+// builder.Services.Configure<FormOptions>(options =>
+// {
+//     options.MultipartBodyLengthLimit = 536870912; // 512 MB
+// });
+
+// // Adjust the Kestrel server limits
+// builder.WebHost.ConfigureKestrel(serverOptions =>
+// {
+//     serverOptions.Limits.MaxRequestBodySize = 536870912; // 512 MB
+// });
 
 var app = builder.Build();
 ServiceProviderHelper.Configure(app.Services);
@@ -64,7 +84,7 @@ var requestPath = $"/{downloadFolder}";
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = fileProvider,
-    ServeUnknownFileTypes = true,  
+    ServeUnknownFileTypes = true,
     RequestPath = requestPath
 });
 
@@ -90,8 +110,76 @@ app.MapDelete("/uploader", async (HttpRequest request) =>
 {
     return Results.Ok();
 });
+// app.MapPost("/uploader", async (HttpRequest request) =>
+// {
+//     if (!request.HasFormContentType)
+//     {
+//         return Results.BadRequest("Invalid form content");
+//     }
+
+//     try
+//     {
+//         var form = await request.ReadFormAsync();
+//         var file = form.Files[0];
+
+//         if (file == null || file.Length == 0)
+//             return Results.BadRequest("File not found or empty");
+
+//         var tcpClient = new TcpClient("http://127.0.0.1", 9000);
+//         using var networkStream = tcpClient.GetStream();
+//         using var writer = new StreamWriter(networkStream) { AutoFlush = true };
+
+//         await writer.WriteLineAsync(file.FileName);
+//         await file.CopyToAsync(networkStream);
+
+//         return Results.Ok(new { fileName = file.FileName, url = $"{request.GetDisplayUrl()}/{file.FileName}" });
+//     }
+//     catch (Exception ee)
+//     {
+//         return Results.BadRequest(ee.Message);
+//     }
+//});
+// app.MapPost("/uploader", async (HttpRequest request) =>
+// {
+//     var maxRequestBodySizeFeature = request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
+//     if (maxRequestBodySizeFeature != null)
+//     {
+//         maxRequestBodySizeFeature.MaxRequestBodySize = null;
+//     }
+
+//     if (!request.HasFormContentType)
+//     {
+//         return Results.BadRequest("Invalid form content");
+//     }
+
+//     try
+//     {
+//         var form = await request.ReadFormAsync();
+//         var file = form.Files[0];
+
+//         if (file == null || file.Length == 0)
+//             return Results.BadRequest("File not found or empty");
+
+//         var filePath = Path.Combine(downloadFolder, file.FileName);
+//         using var stream = new FileStream(filePath, FileMode.Create);
+//         await file.CopyToAsync(stream);
+
+//         return Results.Ok(new { fileName = file.FileName, url = $"{request.GetDisplayUrl()}/{file.FileName}" });
+//     }
+//     catch (Exception ee)
+//     {
+//         return Results.BadRequest(ee.Message);
+//     }
+// });
+
 app.MapPost("/uploader", async (HttpRequest request) =>
 {
+    var maxRequestBodySizeFeature = request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
+    if (maxRequestBodySizeFeature != null)
+    {
+        maxRequestBodySizeFeature.MaxRequestBodySize = null;
+    }
+
     if (!request.HasFormContentType)
     {
         return Results.BadRequest("Invalid form content");
@@ -105,48 +193,17 @@ app.MapPost("/uploader", async (HttpRequest request) =>
         if (file == null || file.Length == 0)
             return Results.BadRequest("File not found or empty");
 
-        var tcpClient = new TcpClient("localhost", 5000);
-        using var networkStream = tcpClient.GetStream();
-        using var writer = new StreamWriter(networkStream) { AutoFlush = true };
-
-        await writer.WriteLineAsync(file.FileName);
-        await file.CopyToAsync(networkStream);
+        var filePath = Path.Combine(downloadFolder, file.FileName);
+        using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
 
         return Results.Ok(new { fileName = file.FileName, url = $"{request.GetDisplayUrl()}/{file.FileName}" });
     }
     catch (Exception ee)
     {
+        Console.WriteLine(ee.Message);
         return Results.BadRequest(ee.Message);
     }
-    // var maxRequestBodySizeFeature = request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
-    // if (maxRequestBodySizeFeature != null)
-    // {
-    //     maxRequestBodySizeFeature.MaxRequestBodySize = null;
-    // }
-
-    // if (!request.HasFormContentType)
-    // {
-    //     return Results.BadRequest("Invalid form content");
-    // }
-
-    // try
-    // {
-    //     var form = await request.ReadFormAsync();
-    //     var file = form.Files[0];
-
-    //     if (file == null || file.Length == 0)
-    //         return Results.BadRequest("File not found or empty");
-
-    //     var filePath = Path.Combine(downloadFolder, file.FileName);
-    //     using var stream = new FileStream(filePath, FileMode.Create);
-    //     await file.CopyToAsync(stream);
-
-    //     return Results.Ok(new { fileName = file.FileName, url = $"{request.GetDisplayUrl()}/{file.FileName}" });
-    // }
-    // catch (Exception ee)
-    // {
-    //     return Results.BadRequest(ee.Message);
-    // }
 });
 
 
